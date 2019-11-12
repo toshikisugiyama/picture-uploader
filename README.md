@@ -105,8 +105,13 @@
 
 ### Laravel のインストール
 ```
-composer create-project --prefer-dist laravel/laravel プロジェクト名
+laravel new picture_uploader
+cd picture_uploader
+valet link picture_uploader
 ```
+
+`http://picture_uploader.test` でアクセスできる。
+
 #### Laravel をインストールしたら...
 ##### 1. データベースを作る
 ###### rootでmysqlにログイン
