@@ -114,23 +114,31 @@ valet link picture_uploader
 
 #### Laravel をインストールしたら...
 ##### 1. データベースを作る
-###### rootでmysqlにログイン
+###### postgreにログイン
 ```
-mysql -u root -p
+psql -U postgres
+Password for user postgres: 
+psql (11.5, server 12.0)
+WARNING: psql major version 11, server major version 12.
+         Some psql features might not work.
+Type "help" for help.
+
+postgres=# create database picture_uploader;
+CREATE DATABASE
+postgres=# \q
 ```
-パスワードは `root`
-```
-create database データベース名;
-grant all on データベース名.* to 'ユーザー名'@'localhost' identified by 'パスワード';
-```
+
 ##### 2. .env の編集
 ```
-DB_CONNECTION=mysql
-DB_HOST=localhost
-DB_PORT=8889
-DB_DATABASE=image_uploader
-DB_USERNAME=image_uploader_user
-DB_PASSWORD=password
+APP_NAME=PictureUploader
+APP_URL=http://picture_uploader.test
+
+DB_CONNECTION=pgsql
+DB_HOST=127.0.0.1
+DB_PORT=5432
+DB_DATABASE=picture_uploader
+DB_USERNAME=postgres
+DB_PASSWORD=postgres
 ```
 ##### 3. app.php の編集
 `'timezone'` と `'locale'` をそれぞれ `'Asia/Tokyo'` と `'ja'` に変更する。
