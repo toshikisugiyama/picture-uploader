@@ -5,7 +5,7 @@
 - Node v10.15.3
 - npm 6.11.3
 - PHP 7.3.11
-- Laravel
+- Laravel Framework 6.5.0
 - React
 
 ### 機能一覧
@@ -164,10 +164,7 @@ trim_trailing_whitespace = false
 [*.{yml,yaml,js,json,html,scss,blade.php}]
 indent_size = 2
 ```
-##### 5. ブラウザで確認する
-```
-php artisan serve
-```
+
 ### React で見た目を表示させる
 
 #### 1. React を使えるようにする
