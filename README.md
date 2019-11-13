@@ -161,7 +161,7 @@ trim_trailing_whitespace = true
 [*.md]
 trim_trailing_whitespace = false
 
-[*.{yml,yaml,js,json,html,scss,blade.php}]
+[*.{yml,yaml,js,json,html,scss,css,blade.php}]
 indent_size = 2
 ```
 
@@ -252,66 +252,47 @@ npm install -S react-router-dom
 ```
 #### 8. PhotoList.js と Login.js を作成する
 ```js:PhotoList.js
-import React from 'react'
-const Login = () => {
+import React from 'react';
+
+const PhotoList = () => {
   return(
-    <div>
-      <h1>Photo List</h1>
-    </div>
-  )
-}
-export default Login
+    <h1>PhotoList</h1>
+  );
+};
+export default PhotoList;
 ```
 ```js:Login.js
-import React from 'react'
+import React from 'react';
+
 const Login = () => {
   return(
-    <div>
-      <h1>Login</h1>
-    </div>
-  )
-}
-export default Login
+    <h1>Login</h1>
+  );
+};
+export default Login;
 ```
 #### 9. App.js を編集する
 ```js:App.js
-import React from 'react'
-import PhotoList from '../components/PhotoList'
-import Login from '../components/Login'
-import {
-  BrowserRouter as Router,
-  Switch,
-  Route,
-  Link,
-} from "react-router-dom";
+import React from 'react';
+import PhotoList from '../components/PhotoList';
+import Login from '../components/Login';
+import {BrowserRouter as Router,Switch,Route,} from 'react-router-dom';
 
 const App = () => {
   return(
     <Router>
-      <div>
-        <nav>
-          <ul>
-            <li>
-              <Link to="/">Photo List</Link>
-            </li>
-            <li>
-              <Link to="/login">Login</Link>
-            </li>
-          </ul>
-        </nav>
-        <Switch>
-          <Route path="/login">
-            <PhotoList />
-          </Route>
-          <Route path="/">
-            <Login />
-          </Route>
-        </Switch>
-      </div>
+      <Switch>
+        <Route path="/login">
+          <Login />
+        </Route>
+        <Route path="/">
+          <PhotoList />
+        </Route>
+      </Switch>
     </Router>
-  )
-}
-export default App
+  );
+};
+export default App;
 ```
 
 ### API 用のルート
@@ -325,7 +306,9 @@ protected function mapApiRoutes()
              ->group(base_path('routes/api.php'));
     }
 ```
+
 この部分を以下のように変更
+
 ```php:RouteServiceProvider.php
 protected function mapApiRoutes()
     {
@@ -335,8 +318,11 @@ protected function mapApiRoutes()
              ->group(base_path('routes/api.php'));
     }
 ```
+
 #### テストコード
+
 新しいテストケースを作成する
+
 ```
 php artisan make:test RegisterApiTest
 ```
