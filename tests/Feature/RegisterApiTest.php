@@ -5,15 +5,15 @@ namespace Tests\Feature;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Foundation\Testing\WithFaker;
 use Tests\TestCase;
+use App\User;
 
 class RegisterApiTest extends TestCase
 {
+    use RefreshDatabase;
     /**
-     * A basic feature test example.
-     *
-     * @return void
+     * @test
      */
-    public function shoule_新しいユーザーを作成して返却する()
+    public function should_新しいユーザーを作成して返却する()
     {
         $data = [
             'name' => 'photo upload user',
@@ -21,10 +21,9 @@ class RegisterApiTest extends TestCase
             'password' => 'test1234',
             'password_confirmation' => 'test1234',
         ];
-        $response = $this->json('POST',route('register'), $data);
+        $response = $this->json('POST', route('register'), $data);
         $user = User::first();
-        $this->assertEquals($data['name'],$user->name);
-
+        $this->assertEquals($data['name'], $user->name);
         $response->assertStatus(201)->assertJson(['name' => $user->name]);
     }
 }
