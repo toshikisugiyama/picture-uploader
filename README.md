@@ -177,16 +177,18 @@ npm run watch
 ```blade.php:index.blade.php
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
-    <head>
-        <meta charset="utf-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1">
-        <title>Laravel</title>
-    </head>
-    <body>
-        <div id='root'></div>
-        <script src="/js/app.js"></script>
-    </body>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>{{ config('app.name') }}</title>
+  <script src="{{ mix('js/app.js') }}" defer></script>
+</head>
+<body>
+  <div id="root"></div>
+</body>
 </html>
+
 ```
 `welcome.blade.php` は削除する。
 
@@ -213,7 +215,9 @@ const App = () => {
 }
 export default App
 ```
+
 #### 5. ルーティング
+
 ##### web.php を編集する
 ```php: web.php
 Route::get('/{any?}', function () {
