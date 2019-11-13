@@ -222,11 +222,31 @@ Route::get('/{any?}', function () {
 ```
 これでブラウザに `Hello World` が表示されているはず。
 
-#### 6. react-router-dom
+#### 6. webpack.mix.js を編集する
+
+```js:webpack.mix.js
+const mix = require('laravel-mix');
+mix.browserSync({
+  files: [
+      "resources/views/index.blade.php",
+      "public/css/app.css",
+      "public/js/app.js"
+  ],
+  proxy: {
+      target: "http://picture_uploader.test/",
+  }
+}).react('resources/js/app.js', 'public/js')
+   .sass('resources/sass/app.scss', 'public/css')
+   .version();
+```
+
+`npm run watch` するとブラウザで確認できる。
+
+#### 7. react-router-dom
 ```
 npm install -S react-router-dom
 ```
-#### 7. PhotoList.js と Login.js を作成する
+#### 8. PhotoList.js と Login.js を作成する
 ```js:PhotoList.js
 import React from 'react'
 const Login = () => {
@@ -249,7 +269,7 @@ const Login = () => {
 }
 export default Login
 ```
-#### 8. App.js を編集する
+#### 9. App.js を編集する
 ```js:App.js
 import React from 'react'
 import PhotoList from '../components/PhotoList'

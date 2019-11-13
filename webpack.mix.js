@@ -13,9 +13,9 @@ const mix = require('laravel-mix');
 
 mix.browserSync({
   files: [
-      "resources/views/welcome.blade.php",
+      "resources/views/index.blade.php",
       "public/css/app.css",
-      "public/js/app.css"
+      "public/js/app.js"
   ],
   proxy: {
       target: "http://picture_uploader.test/",
