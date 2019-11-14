@@ -1,8 +1,11 @@
 import React from 'react';
+import LoginForm from '../components/LoginForm';
+import RegisterForm from '../components/RegisterForm';
 
 const Login = props => {
+  const isLogin = props.tab;
   return(
-    <div>
+    <div className="login">
       <ul className="tab">
         <li
           className={`tab-item ${(props.tab===0)?'active':''}`}
@@ -17,9 +20,12 @@ const Login = props => {
           Register
         </li>
       </ul>
-      <span>
-        {props.tab}
-      </span>
+      {
+        (props.tab===0)?
+          <LoginForm />
+        :
+          <RegisterForm />
+      }
     </div>
   );
 };
