@@ -2,6 +2,7 @@ import React from 'react';
 import Navbar from '../components/Navbar';
 import PhotoList from '../components/PhotoList';
 import Login from '../components/Login';
+import Footer from '../components/Footer';
 import {BrowserRouter as Router,Switch,Route,} from 'react-router-dom';
 
 const App = () => {
@@ -16,6 +17,7 @@ const App = () => {
           <PhotoList />
         </Route>
       </Switch>
+      <Footer />
     </Router>
   );
 };
