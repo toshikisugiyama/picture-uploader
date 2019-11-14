@@ -1,8 +1,26 @@
 import React from 'react';
 
-const Login = () => {
+const Login = props => {
   return(
-    <h1>Login</h1>
+    <div>
+      <ul className="tab">
+        <li
+          className={`tab-item ${(props.tab===0)?'active':''}`}
+          onClick={props.handleLogin}
+        >
+          Login
+        </li>
+        <li
+          className={`tab-item ${(props.tab===1)?'active':''}`}
+          onClick={props.handleRegister}
+        >
+          Register
+        </li>
+      </ul>
+      <span>
+        {props.tab}
+      </span>
+    </div>
   );
 };
 export default Login;
