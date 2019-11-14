@@ -74,7 +74,11 @@
 |created_at|timestamp||||
 |updated_at|timestamp||||
 
-#### URL 一覧
+### ER図
+
+![ER図](https://github.com/toshikisugiyama/picture-uploader/blob/develop/er.jpg "ER図")
+
+### URL 一覧
 
 |URL|メソッド|認証|内容|
 |:--|:--|:--|:--|
@@ -91,7 +95,7 @@
 |/|GET||HTMLを最初に返却|
 |/photos/{id}/download|GET||写真ダウンロード|
 
-##### フロントエンド
+### フロントエンド
 
 |URL|内容|
 |:--|:--|
@@ -165,6 +169,8 @@ trim_trailing_whitespace = false
 indent_size = 2
 ```
 
+---
+
 ### React で見た目を表示させる
 
 #### 1. React を使えるようにする
@@ -193,6 +199,9 @@ npm run watch
 `welcome.blade.php` は削除する。
 
 #### 3. app.php を編集する
+
+`resourses/js/app.js`
+
 ```js:app.js
 import React from 'react'
 import ReactDOM from 'react-dom'
@@ -204,6 +213,9 @@ ReactDOM.render(
 )
 ```
 #### 4. App.js を編集する
+
+`resourses/js/components/App.js`
+
 ```js:App.js
 import React from 'react'
 const App = () => {
@@ -219,6 +231,9 @@ export default App
 #### 5. ルーティング
 
 ##### web.php を編集する
+
+`routes/web.php`
+
 ```php: web.php
 Route::get('/{any?}', function () {
     return view('index');
@@ -226,7 +241,10 @@ Route::get('/{any?}', function () {
 ```
 これでブラウザに `Hello World` が表示されているはず。
 
-#### 6. webpack.mix.js を編集する
+---
+
+### React Router を使う
+#### 1. webpack.mix.js を編集する
 
 ```js:webpack.mix.js
 const mix = require('laravel-mix');
@@ -246,11 +264,11 @@ mix.browserSync({
 
 `npm run watch` するとブラウザで確認できる。
 
-#### 7. react-router-dom
+#### 2. react-router-dom
 ```
 npm install -S react-router-dom
 ```
-#### 8. PhotoList.js と Login.js を作成する
+#### 3. PhotoList.js と Login.js を作成する
 ```js:PhotoList.js
 import React from 'react';
 
@@ -271,7 +289,10 @@ const Login = () => {
 };
 export default Login;
 ```
-#### 9. App.js を編集する
+#### 4. App.js を編集する
+
+`resourse/js/components/App.js`
+
 ```js:App.js
 import React from 'react';
 import PhotoList from '../components/PhotoList';
@@ -294,6 +315,10 @@ const App = () => {
 };
 export default App;
 ```
+
+これで、`/` と `/login` にアクセスすると表示が変わる。
+
+---
 
 ### API 用のルート
 `RouteServiceProvider.php` の編集
@@ -319,9 +344,12 @@ protected function mapApiRoutes()
     }
 ```
 
+---
+
 #### テストコード
 
-新しいテストケースを作成する
+##### 会員登録API
+会員登録APIのテストケースを作成する
 
 ```
 php artisan make:test RegisterApiTest
@@ -332,34 +360,59 @@ php artisan make:test RegisterApiTest
 
 namespace Tests\Feature;
 
-use App\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Foundation\Testing\WithFaker;
 use Tests\TestCase;
+use App\User;
 
 class RegisterApiTest extends TestCase
 {
     use RefreshDatabase;
-
     /**
-     * A basic feature test example.
-     *
-     * @return void
+     * @test
      */
-    public function should_create_a_new_user_and_return()
+    public function should_新しいユーザーを作成して返却する()
     {
         $data = [
-            'name' => 'user',
-            'email' => 'dummy@emali.com',
-            'password' => 'password',
-            'password_confirmation' => 'password',
+            'name' => 'photo upload user',
+            'email' => 'test@email.com',
+            'password' => 'test1234',
+            'password_confirmation' => 'test1234',
         ];
         $response = $this->json('POST', route('register'), $data);
         $user = User::first();
-        $this->assertSame($data['name'], $user->name);
-        $response
-            ->assertStatus(200)
-            ->assertJson(['name' => $user->name]);
+        $this->assertEquals($data['name'], $user->name);
+        $response->assertStatus(201)->assertJson(['name' => $user->name]);
     }
 }
 ```
+###### ルート定義
+
+`routes/api.php`
+
+```php:api.php
+Routes::post('/register', 'Auth\RegisterController@register')->name('register');
+```
+
+###### コントローラー
+
+`app/Http/Controllers/Auth/RegisterController.php` の `RegisterController` クラスに `registered` メソッドを追加する。
+
+```php:RgisterController.php
+    protected function registered(Request $request, $user)
+    {
+        return $user;
+    }
+```
+
+###### テストの実施
+
+テストを実施する。
+
+```
+./vendor/bin/phpunit --testdox
+```
+
+##### ログインAPI
+
+
