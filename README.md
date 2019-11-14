@@ -76,7 +76,7 @@
 
 ### ER図
 
-![ER図](https://github.com/toshikisugiyama/picture-uploader/blob/develop/er.jpg "ER図")
+![ER図](https://github.com/toshikisugiyama/picture-uploader/blob/master/er.jpg "ER図")
 
 ### URL 一覧
 

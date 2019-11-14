@@ -2,8 +2,8 @@
  * @param {String} searchKey 検索するキー
  * @returns {String} キーに対応する値
  */
-export function getCookieValue(serchKey){
-  if (typeof serchKey === 'undefined') {
+export function getCookieValue(searchKey){
+  if (typeof searchKey === 'undefined') {
     return ''
   }
   let val = ''
