@@ -8,7 +8,8 @@ use Tests\TestCase;
 use App\User;
 use Illuminate\Http\Request;
 
-class LoginApiTest extends TestCase
+
+class LogoutApiTest extends TestCase
 {
     use RefreshDatabase;
     /**
@@ -20,17 +21,14 @@ class LoginApiTest extends TestCase
         $this->user = factory(User::class)->create();
     }
 
+
     /**
      * @test
      */
-    public function should_登録済みのユーザーを認証して返却する()
+    public function should_認証済みのユーザーをログアウトさせる()
     {
-        $response = $this->json('POST', route('login'),[
-            'email' => $this->user->email,
-            'password' => 'password'
-        ]);
-
-        $response->assertStatus(200)->assertJson(['name' => $this->user->name]);
-        $this->assertAuthenticatedAs($this->user);
+        $response = $this->actingAs($this->user)->json('POST', route('logout'));
+        $response->assertStatus(200);
+        $this->assertGuest();
     }
 }
