@@ -13,15 +13,48 @@ const App = () => {
   const handleRegister = () => {
     setTab(1);
   };
+  const [loginEmail, setLoginEmail] = useState('');
+  const [loginPassword, setLoginPassword] = useState('');
+  const [registerEmail, setRegisterEmail] = useState('');
+  const [registerPassword, setRegisterPassword] = useState('');
+  const changeLoginEmail = e => {
+    setLoginEmail(e.target.value);
+  }
+  const changeLoginPassword = e => {
+    setLoginPassword(e.target.value);
+  }
+  const changeRegisterEmail = e => {
+    setRegisterEmail(e.target.value);
+  }
+  const changeRegisterPassword = e => {
+    setRegisterPassword(e.target.value);
+  }
+  const handleFormSubmit = e => {
+    e.preventDefault();
+    console.log(loginEmail);
+    console.log(loginPassword);
+    console.log(registerEmail);
+    console.log(registerPassword);
+  }
+
   return(
     <Router>
       <Navbar />
       <Switch>
         <Route path="/login">
           <Login
+            tab={tab}
             handleLogin={handleLogin}
             handleRegister={handleRegister}
-            tab={tab}
+            loginEmail={loginEmail}
+            changeLoginEmail={changeLoginEmail}
+            loginPassword={loginPassword}
+            changeLoginPassword={changeLoginPassword}
+            registerEmail={registerEmail}
+            changeRegisterEmail={changeRegisterEmail}
+            registerPassword={registerPassword}
+            changeRegisterPassword={changeRegisterPassword}
+            handleFormSubmit={handleFormSubmit}
           />
         </Route>
         <Route path="/">

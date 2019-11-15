@@ -1,17 +1,38 @@
 import React from 'react';
 
-const LoginForm = () => {
+const LoginForm = (
+  {
+    loginEmail,
+    changeLoginEmail,
+    loginPassword,
+    changeLoginPassword,
+    handleFormSubmit
+  }) => {
   return(
     <div>
-      <form className="form">
+      <form className="form" onSubmit={handleFormSubmit}>
         <div className="form-contents">
           <div className="form-items">
-            <label for="login-email">Email</label>
-            <input type="text" className="form-item" id="login-email" />
+            <label htmlFor="login-email">Email</label>
+            <input
+              type="text"
+              className="form-item"
+              id="login-email"
+              name="loginEmail"
+              onChange={changeLoginEmail}
+              value={loginEmail}
+            />
           </div>
           <div className="form-items">
-            <label for="login-password">Password</label>
-            <input type="text" className="form-item" id="login-password" />
+            <label htmlFor="login-password">Password</label>
+            <input
+              type="text"
+              className="form-item"
+              id="login-password"
+              name="loginPassword"
+              onChange={changeLoginPassword}
+              value={loginPassword}
+            />
           </div>
         </div>
         <div className="form-button">
