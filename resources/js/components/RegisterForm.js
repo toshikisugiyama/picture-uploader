@@ -4,8 +4,12 @@ const RegisterForm = (
   {
     registerEmail,
     changeRegisterEmail,
+    registerUserName,
+    changeRegisterUserName,
     registerPassword,
     changeRegisterPassword,
+    registerPasswordConfirmation,
+    changeRegisterPasswordConfirmation,
     handleFormSubmit
   }) => {
   return(
@@ -13,25 +17,51 @@ const RegisterForm = (
       <form className="form" onSubmit={handleFormSubmit}>
         <div className="form-contents">
           <div className="form-items">
-            <label htmlFor="register-email">Email</label>
+            <label htmlFor="username">Name</label>
             <input
               type="text"
               className="form-item"
-              id="register-email"
+              id="username"
+              name="registerUserName"
+              autoComplete="username"
+              onChange={changeRegisterUserName}
+              value={registerUserName}
+            />
+          </div>
+          <div className="form-items">
+            <label htmlFor="email">Email</label>
+            <input
+              type="text"
+              className="form-item"
+              id="email"
               name="registerEmail"
+              autoComplete="email"
               onChange={changeRegisterEmail}
               value={registerEmail}
             />
           </div>
           <div className="form-items">
-            <label htmlFor="register-password">Password</label>
+            <label htmlFor="password">Password</label>
             <input
-              type="text"
+              type="password"
               className="form-item"
-              id="register-password"
+              id="password"
               name="registerPassword"
+              autoComplete="new-password"
               onChange={changeRegisterPassword}
               value={registerPassword}
+            />
+          </div>
+          <div className="form-items">
+            <label htmlFor="password-confirmation">Password (confirm)</label>
+            <input
+              type="password"
+              className="form-item"
+              id="password-confirmation"
+              name="registerPasswordConfirmation"
+              autoComplete="new-password"
+              onChange={changeRegisterPasswordConfirmation}
+              value={registerPasswordConfirmation}
             />
           </div>
         </div>

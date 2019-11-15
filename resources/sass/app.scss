@@ -31,6 +31,7 @@ nav {
   flex-direction: column;
   .tab {
     @include contents;
+    margin: 100px auto 0;
     .tab-item {
       color: #777;
     }
@@ -42,6 +43,7 @@ nav {
   .form {
     @include contents;
     flex-direction: column;
+    margin: 25px auto 50px;
     &-contents {
       .form-items {
         @include contents;
@@ -50,6 +52,9 @@ nav {
           margin: 5px 0 5px 10px;
         }
       }
+    }
+    &-button {
+      margin: 25px auto;
     }
   }
 }

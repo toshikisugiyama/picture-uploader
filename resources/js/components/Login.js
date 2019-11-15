@@ -11,10 +11,14 @@ const Login = (
     changeLoginEmail,
     loginPassword,
     changeLoginPassword,
+    registerUserName,
+    changeRegisterUserName,
     registerEmail,
     changeRegisterEmail,
     registerPassword,
     changeRegisterPassword,
+    registerPasswordConfirmation,
+    changeRegisterPasswordConfirmation,
     handleFormSubmit
   }) => {
   return(
@@ -44,10 +48,14 @@ const Login = (
           />
         :
           <RegisterForm
+            registerUserName={registerUserName}
+            changeRegisterUserName={changeRegisterUserName}
             registerEmail={registerEmail}
             changeRegisterEmail={changeRegisterEmail}
             registerPassword={registerPassword}
             changeRegisterPassword={changeRegisterPassword}
+            registerPasswordConfirmation={registerPasswordConfirmation}
+            changeRegisterPasswordConfirmation={changeRegisterPasswordConfirmation}
             handleFormSubmit={handleFormSubmit}
           />
       }

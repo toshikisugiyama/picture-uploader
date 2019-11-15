@@ -13,23 +13,25 @@ const LoginForm = (
       <form className="form" onSubmit={handleFormSubmit}>
         <div className="form-contents">
           <div className="form-items">
-            <label htmlFor="login-email">Email</label>
+            <label htmlFor="email">Email</label>
             <input
               type="text"
               className="form-item"
-              id="login-email"
+              id="email"
               name="loginEmail"
+              autoComplete="email"
               onChange={changeLoginEmail}
               value={loginEmail}
             />
           </div>
           <div className="form-items">
-            <label htmlFor="login-password">Password</label>
+            <label htmlFor="password">Password</label>
             <input
-              type="text"
+              type="password"
               className="form-item"
-              id="login-password"
+              id="password"
               name="loginPassword"
+              autoComplete="current-password"
               onChange={changeLoginPassword}
               value={loginPassword}
             />

@@ -393,6 +393,7 @@ nav .navbar-menu .navbar-item:last-child {
   display: flex;
   -webkit-box-align: center;
           align-items: center;
+  margin: 100px auto 0;
 }
 
 .login .tab .tab-item {
@@ -412,6 +413,7 @@ nav .navbar-menu .navbar-item:last-child {
   -webkit-box-orient: vertical;
   -webkit-box-direction: normal;
           flex-direction: column;
+  margin: 25px auto 50px;
 }
 
 .login .form-contents .form-items {
@@ -425,6 +427,10 @@ nav .navbar-menu .navbar-item:last-child {
 
 .login .form-contents .form-items .form-item {
   margin: 5px 0 5px 10px;
+}
+
+.login .form-button {
+  margin: 25px auto;
 }
 
 footer {

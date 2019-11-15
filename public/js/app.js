@@ -36110,6 +36110,8 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _components_Login__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../components/Login */ "./resources/js/components/Login.js");
 /* harmony import */ var _components_Footer__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ../components/Footer */ "./resources/js/components/Footer.js");
 /* harmony import */ var react_router_dom__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! react-router-dom */ "./node_modules/react-router-dom/esm/react-router-dom.js");
+function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+
 function _slicedToArray(arr, i) { return _arrayWithHoles(arr) || _iterableToArrayLimit(arr, i) || _nonIterableRest(); }
 
 function _nonIterableRest() { throw new TypeError("Invalid attempt to destructure non-iterable instance"); }
@@ -36126,6 +36128,8 @@ function _arrayWithHoles(arr) { if (Array.isArray(arr)) return arr; }
 
 
 var App = function App() {
+  var _React$createElement;
+
   var _useState = Object(react__WEBPACK_IMPORTED_MODULE_0__["useState"])(0),
       _useState2 = _slicedToArray(_useState, 2),
       tab = _useState2[0],
@@ -36151,13 +36155,23 @@ var App = function App() {
 
   var _useState7 = Object(react__WEBPACK_IMPORTED_MODULE_0__["useState"])(''),
       _useState8 = _slicedToArray(_useState7, 2),
-      registerEmail = _useState8[0],
-      setRegisterEmail = _useState8[1];
+      registerUserName = _useState8[0],
+      setRegisterUserName = _useState8[1];
 
   var _useState9 = Object(react__WEBPACK_IMPORTED_MODULE_0__["useState"])(''),
       _useState10 = _slicedToArray(_useState9, 2),
-      registerPassword = _useState10[0],
-      setRegisterPassword = _useState10[1];
+      registerEmail = _useState10[0],
+      setRegisterEmail = _useState10[1];
+
+  var _useState11 = Object(react__WEBPACK_IMPORTED_MODULE_0__["useState"])(''),
+      _useState12 = _slicedToArray(_useState11, 2),
+      registerPassword = _useState12[0],
+      setRegisterPassword = _useState12[1];
+
+  var _useState13 = Object(react__WEBPACK_IMPORTED_MODULE_0__["useState"])(''),
+      _useState14 = _slicedToArray(_useState13, 2),
+      registerPasswordConfirmation = _useState14[0],
+      setRegisterPasswordConfirmation = _useState14[1];
 
   var changeLoginEmail = function changeLoginEmail(e) {
     setLoginEmail(e.target.value);
@@ -36167,12 +36181,20 @@ var App = function App() {
     setLoginPassword(e.target.value);
   };
 
+  var changeRegisterUserName = function changeRegisterUserName(e) {
+    setRegisterUserName(e.target.value);
+  };
+
   var changeRegisterEmail = function changeRegisterEmail(e) {
     setRegisterEmail(e.target.value);
   };
 
   var changeRegisterPassword = function changeRegisterPassword(e) {
     setRegisterPassword(e.target.value);
+  };
+
+  var changeRegisterPasswordConfirmation = function changeRegisterPasswordConfirmation(e) {
+    setRegisterPasswordConfirmation(e.target.value);
   };
 
   var handleFormSubmit = function handleFormSubmit(e) {
@@ -36185,10 +36207,12 @@ var App = function App() {
 
   return react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(react_router_dom__WEBPACK_IMPORTED_MODULE_5__["BrowserRouter"], null, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(_components_Navbar__WEBPACK_IMPORTED_MODULE_1__["default"], null), react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(react_router_dom__WEBPACK_IMPORTED_MODULE_5__["Switch"], null, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(react_router_dom__WEBPACK_IMPORTED_MODULE_5__["Route"], {
     path: "/login"
-  }, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(_components_Login__WEBPACK_IMPORTED_MODULE_3__["default"], {
+  }, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(_components_Login__WEBPACK_IMPORTED_MODULE_3__["default"], (_React$createElement = {
     tab: tab,
     handleLogin: handleLogin,
     handleRegister: handleRegister,
+    registerUserName: registerUserName,
+    changeRegisterUserName: changeRegisterUserName,
     loginEmail: loginEmail,
     changeLoginEmail: changeLoginEmail,
     loginPassword: loginPassword,
@@ -36198,7 +36222,7 @@ var App = function App() {
     registerPassword: registerPassword,
     changeRegisterPassword: changeRegisterPassword,
     handleFormSubmit: handleFormSubmit
-  })), react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(react_router_dom__WEBPACK_IMPORTED_MODULE_5__["Route"], {
+  }, _defineProperty(_React$createElement, "registerPassword", registerPassword), _defineProperty(_React$createElement, "changeRegisterPassword", changeRegisterPassword), _defineProperty(_React$createElement, "registerPasswordConfirmation", registerPasswordConfirmation), _defineProperty(_React$createElement, "changeRegisterPasswordConfirmation", changeRegisterPasswordConfirmation), _React$createElement))), react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(react_router_dom__WEBPACK_IMPORTED_MODULE_5__["Route"], {
     path: "/"
   }, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(_components_PhotoList__WEBPACK_IMPORTED_MODULE_2__["default"], null))), react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(_components_Footer__WEBPACK_IMPORTED_MODULE_4__["default"], null));
 };
@@ -36257,10 +36281,14 @@ var Login = function Login(_ref) {
       changeLoginEmail = _ref.changeLoginEmail,
       loginPassword = _ref.loginPassword,
       changeLoginPassword = _ref.changeLoginPassword,
+      registerUserName = _ref.registerUserName,
+      changeRegisterUserName = _ref.changeRegisterUserName,
       registerEmail = _ref.registerEmail,
       changeRegisterEmail = _ref.changeRegisterEmail,
       registerPassword = _ref.registerPassword,
       changeRegisterPassword = _ref.changeRegisterPassword,
+      registerPasswordConfirmation = _ref.registerPasswordConfirmation,
+      changeRegisterPasswordConfirmation = _ref.changeRegisterPasswordConfirmation,
       handleFormSubmit = _ref.handleFormSubmit;
   return react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("div", {
     className: "login"
@@ -36279,10 +36307,14 @@ var Login = function Login(_ref) {
     changeLoginPassword: changeLoginPassword,
     handleFormSubmit: handleFormSubmit
   }) : react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(_components_RegisterForm__WEBPACK_IMPORTED_MODULE_2__["default"], {
+    registerUserName: registerUserName,
+    changeRegisterUserName: changeRegisterUserName,
     registerEmail: registerEmail,
     changeRegisterEmail: changeRegisterEmail,
     registerPassword: registerPassword,
     changeRegisterPassword: changeRegisterPassword,
+    registerPasswordConfirmation: registerPasswordConfirmation,
+    changeRegisterPasswordConfirmation: changeRegisterPasswordConfirmation,
     handleFormSubmit: handleFormSubmit
   }));
 };
@@ -36318,23 +36350,25 @@ var LoginForm = function LoginForm(_ref) {
   }, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("div", {
     className: "form-items"
   }, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("label", {
-    htmlFor: "login-email"
+    htmlFor: "email"
   }, "Email"), react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("input", {
     type: "text",
     className: "form-item",
-    id: "login-email",
+    id: "email",
     name: "loginEmail",
+    autoComplete: "email",
     onChange: changeLoginEmail,
     value: loginEmail
   })), react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("div", {
     className: "form-items"
   }, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("label", {
-    htmlFor: "login-password"
+    htmlFor: "password"
   }, "Password"), react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("input", {
-    type: "text",
+    type: "password",
     className: "form-item",
-    id: "login-password",
+    id: "password",
     name: "loginPassword",
+    autoComplete: "current-password",
     onChange: changeLoginPassword,
     value: loginPassword
   }))), react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("div", {
@@ -36420,8 +36454,12 @@ __webpack_require__.r(__webpack_exports__);
 var RegisterForm = function RegisterForm(_ref) {
   var registerEmail = _ref.registerEmail,
       changeRegisterEmail = _ref.changeRegisterEmail,
+      registerUserName = _ref.registerUserName,
+      changeRegisterUserName = _ref.changeRegisterUserName,
       registerPassword = _ref.registerPassword,
       changeRegisterPassword = _ref.changeRegisterPassword,
+      registerPasswordConfirmation = _ref.registerPasswordConfirmation,
+      changeRegisterPasswordConfirmation = _ref.changeRegisterPasswordConfirmation,
       handleFormSubmit = _ref.handleFormSubmit;
   return react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("div", null, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("form", {
     className: "form",
@@ -36431,25 +36469,51 @@ var RegisterForm = function RegisterForm(_ref) {
   }, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("div", {
     className: "form-items"
   }, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("label", {
-    htmlFor: "register-email"
+    htmlFor: "username"
+  }, "Name"), react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("input", {
+    type: "text",
+    className: "form-item",
+    id: "username",
+    name: "registerUserName",
+    autoComplete: "username",
+    onChange: changeRegisterUserName,
+    value: registerUserName
+  })), react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("div", {
+    className: "form-items"
+  }, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("label", {
+    htmlFor: "email"
   }, "Email"), react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("input", {
     type: "text",
     className: "form-item",
-    id: "register-email",
+    id: "email",
     name: "registerEmail",
+    autoComplete: "email",
     onChange: changeRegisterEmail,
     value: registerEmail
   })), react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("div", {
     className: "form-items"
   }, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("label", {
-    htmlFor: "register-password"
+    htmlFor: "password"
   }, "Password"), react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("input", {
-    type: "text",
+    type: "password",
     className: "form-item",
-    id: "register-password",
+    id: "password",
     name: "registerPassword",
+    autoComplete: "new-password",
     onChange: changeRegisterPassword,
     value: registerPassword
+  })), react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("div", {
+    className: "form-items"
+  }, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("label", {
+    htmlFor: "password-confirmation"
+  }, "Password (confirm)"), react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("input", {
+    type: "password",
+    className: "form-item",
+    id: "password-confirmation",
+    name: "registerPasswordConfirmation",
+    autoComplete: "new-password",
+    onChange: changeRegisterPasswordConfirmation,
+    value: registerPasswordConfirmation
   }))), react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("div", {
     className: "form-button"
   }, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("button", {

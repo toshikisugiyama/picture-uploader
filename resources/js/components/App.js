@@ -15,19 +15,27 @@ const App = () => {
   };
   const [loginEmail, setLoginEmail] = useState('');
   const [loginPassword, setLoginPassword] = useState('');
+  const [registerUserName, setRegisterUserName] = useState('');
   const [registerEmail, setRegisterEmail] = useState('');
   const [registerPassword, setRegisterPassword] = useState('');
+  const [registerPasswordConfirmation, setRegisterPasswordConfirmation] = useState('');
   const changeLoginEmail = e => {
     setLoginEmail(e.target.value);
   }
   const changeLoginPassword = e => {
     setLoginPassword(e.target.value);
   }
+  const changeRegisterUserName = e => {
+    setRegisterUserName(e.target.value);
+  }
   const changeRegisterEmail = e => {
     setRegisterEmail(e.target.value);
   }
   const changeRegisterPassword = e => {
     setRegisterPassword(e.target.value);
+  }
+  const changeRegisterPasswordConfirmation = e => {
+    setRegisterPasswordConfirmation(e.target.value);
   }
   const handleFormSubmit = e => {
     e.preventDefault();
@@ -46,6 +54,8 @@ const App = () => {
             tab={tab}
             handleLogin={handleLogin}
             handleRegister={handleRegister}
+            registerUserName={registerUserName}
+            changeRegisterUserName={changeRegisterUserName}
             loginEmail={loginEmail}
             changeLoginEmail={changeLoginEmail}
             loginPassword={loginPassword}
@@ -55,6 +65,10 @@ const App = () => {
             registerPassword={registerPassword}
             changeRegisterPassword={changeRegisterPassword}
             handleFormSubmit={handleFormSubmit}
+            registerPassword={registerPassword}
+            changeRegisterPassword={changeRegisterPassword}
+            registerPasswordConfirmation={registerPasswordConfirmation}
+            changeRegisterPasswordConfirmation={changeRegisterPasswordConfirmation}
           />
         </Route>
         <Route path="/">
