@@ -255,6 +255,17 @@ new Vue({
 
 ---
 
+### Vue Router
+
+#### vue-router のインストール
+
+```
+npm install -D vue-router
+```
+
+
+---
+
 ### API 用のルート
 `RouteServiceProvider.php` の編集
 ```php:RouteServiceProvider.php
