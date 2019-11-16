@@ -105,9 +105,8 @@
 
 ---
 
-## Laravel で React を使う
-
 ### Laravel のインストール
+
 ```
 laravel new picture_uploader
 cd picture_uploader
@@ -119,6 +118,7 @@ valet link picture_uploader
 #### Laravel をインストールしたら...
 ##### 1. データベースを作る
 ###### postgreにログイン
+
 ```
 psql -U postgres
 Password for user postgres: 
@@ -144,13 +144,16 @@ DB_DATABASE=picture_uploader
 DB_USERNAME=postgres
 DB_PASSWORD=postgres
 ```
+
 ##### 3. app.php の編集
 `'timezone'` と `'locale'` をそれぞれ `'Asia/Tokyo'` と `'ja'` に変更する。
 ```php:app.php
 'timezone' => 'Asia/Tokyo',
 'locale' => 'ja',
 ```
+
 ##### 4. .editorconfig の編集
+
 ```
 root = true
 
@@ -171,7 +174,84 @@ indent_size = 2
 
 ---
 
+### フロントエンドの準備
 
+
+#### webpack.mix.js を編集する
+
+```js:webpack.mix.js
+const mix = require('laravel-mix');
+mix.browserSync({
+  files: [
+    "resources/views/index.blade.php",
+    "public/css/app.css",
+    "public/js/app.js"
+  ],
+  proxy: {
+    target: "http://picture_uploader.test/"
+  }
+}).js('resources/js/app.js', 'public/js')
+  .sass('resources/sass/app.scss', 'public/css')
+  .version();
+```
+
+`npm run dev`
+
+#### ルーティング
+
+`routes/web.php` の編集
+
+```php:web.php
+<?php
+
+Route::get('/{any?}', function () {
+    return view('index');
+})->where('any', '.+');
+```
+
+#### index.blade.php を作成する
+
+```
+touch resources/views/index.blade.php
+```
+
+#### index.blade.php を編集する
+
+`resources/views/index.blade.php`
+
+```php:index.blade.php
+<!DOCTYPE html>
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>{{ config('app.name') }}</title>
+  <script src="{{ mix('js/app.js') }}" deffer></script>
+  <link rel="stylesheet" href="{{ mix('css/app.css') }}">
+</head>
+<body>
+  <div id='app'></div>
+</body>
+</html>
+```
+
+#### app.js を編集する
+
+`resources/js/app.js`
+
+```js:app.js
+import Vue from 'vue'
+
+new Vue({
+  el: '#app',
+  template: '<h1>Hello world</h1>'
+})
+```
+
+`npm run watch`
+
+ブラウザに表示される。
 
 ---
 
