@@ -5,7 +5,7 @@
 - Node v10.15.3
 - npm 6.11.3
 - PHP 7.3.11
-- Laravel
+- Laravel Framework 6.5.0
 - React
 
 ### 機能一覧
@@ -74,7 +74,11 @@
 |created_at|timestamp||||
 |updated_at|timestamp||||
 
-#### URL 一覧
+### ER図
+
+![ER図](https://github.com/toshikisugiyama/picture-uploader/blob/develop/er.jpg "ER図")
+
+### URL 一覧
 
 |URL|メソッド|認証|内容|
 |:--|:--|:--|:--|
@@ -91,7 +95,7 @@
 |/|GET||HTMLを最初に返却|
 |/photos/{id}/download|GET||写真ダウンロード|
 
-##### フロントエンド
+### フロントエンド
 
 |URL|内容|
 |:--|:--|
@@ -161,137 +165,15 @@ trim_trailing_whitespace = true
 [*.md]
 trim_trailing_whitespace = false
 
-[*.{yml,yaml,js,json,html,scss,blade.php}]
+[*.{yml,yaml,js,json,html,scss,css,blade.php}]
 indent_size = 2
 ```
-##### 5. ブラウザで確認する
-```
-php artisan serve
-```
-### React で見た目を表示させる
 
-#### 1. React を使えるようにする
-```
-php artisan preset react
-npm install && npm run dev
-npm run watch
-```
-#### 2. index.blade.php を作成する
-```blade.php:index.blade.php
-<!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
-    <head>
-        <meta charset="utf-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1">
-        <title>Laravel</title>
-    </head>
-    <body>
-        <div id='root'></div>
-        <script src="/js/app.js"></script>
-    </body>
-</html>
-```
-`welcome.blade.php` は削除する。
+---
 
-#### 3. app.php を編集する
-```js:app.js
-import React from 'react'
-import ReactDOM from 'react-dom'
-import App from './components/app'
 
-ReactDOM.render(
-  <App />,
-  document.getElementById('root')
-)
-```
-#### 4. App.js を編集する
-```js:App.js
-import React from 'react'
-const App = () => {
-    return(
-        <div>
-            Hello World
-        </div>
-    )
-}
-export default App
-```
-#### 5. ルーティング
-##### web.php を編集する
-```php: web.php
-Route::get('/{any?}', function () {
-    return view('index');
-})->where('any', '.+');
-```
-これでブラウザに `Hello World` が表示されているはず。
 
-#### 6. react-router-dom
-```
-npm install -S react-router-dom
-```
-#### 7. PhotoList.js と Login.js を作成する
-```js:PhotoList.js
-import React from 'react'
-const Login = () => {
-  return(
-    <div>
-      <h1>Photo List</h1>
-    </div>
-  )
-}
-export default Login
-```
-```js:Login.js
-import React from 'react'
-const Login = () => {
-  return(
-    <div>
-      <h1>Login</h1>
-    </div>
-  )
-}
-export default Login
-```
-#### 8. App.js を編集する
-```js:App.js
-import React from 'react'
-import PhotoList from '../components/PhotoList'
-import Login from '../components/Login'
-import {
-  BrowserRouter as Router,
-  Switch,
-  Route,
-  Link,
-} from "react-router-dom";
-
-const App = () => {
-  return(
-    <Router>
-      <div>
-        <nav>
-          <ul>
-            <li>
-              <Link to="/">Photo List</Link>
-            </li>
-            <li>
-              <Link to="/login">Login</Link>
-            </li>
-          </ul>
-        </nav>
-        <Switch>
-          <Route path="/login">
-            <PhotoList />
-          </Route>
-          <Route path="/">
-            <Login />
-          </Route>
-        </Switch>
-      </div>
-    </Router>
-  )
-}
-export default App
-```
+---
 
 ### API 用のルート
 `RouteServiceProvider.php` の編集
@@ -304,7 +186,9 @@ protected function mapApiRoutes()
              ->group(base_path('routes/api.php'));
     }
 ```
+
 この部分を以下のように変更
+
 ```php:RouteServiceProvider.php
 protected function mapApiRoutes()
     {
@@ -314,8 +198,14 @@ protected function mapApiRoutes()
              ->group(base_path('routes/api.php'));
     }
 ```
+
+---
+
 #### テストコード
-新しいテストケースを作成する
+
+##### 会員登録API
+会員登録APIのテストケースを作成する
+
 ```
 php artisan make:test RegisterApiTest
 ```
@@ -325,34 +215,59 @@ php artisan make:test RegisterApiTest
 
 namespace Tests\Feature;
 
-use App\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Foundation\Testing\WithFaker;
 use Tests\TestCase;
+use App\User;
 
 class RegisterApiTest extends TestCase
 {
     use RefreshDatabase;
-
     /**
-     * A basic feature test example.
-     *
-     * @return void
+     * @test
      */
-    public function should_create_a_new_user_and_return()
+    public function should_新しいユーザーを作成して返却する()
     {
         $data = [
-            'name' => 'user',
-            'email' => 'dummy@emali.com',
-            'password' => 'password',
-            'password_confirmation' => 'password',
+            'name' => 'photo upload user',
+            'email' => 'test@email.com',
+            'password' => 'test1234',
+            'password_confirmation' => 'test1234',
         ];
         $response = $this->json('POST', route('register'), $data);
         $user = User::first();
-        $this->assertSame($data['name'], $user->name);
-        $response
-            ->assertStatus(200)
-            ->assertJson(['name' => $user->name]);
+        $this->assertEquals($data['name'], $user->name);
+        $response->assertStatus(201)->assertJson(['name' => $user->name]);
     }
 }
 ```
+###### ルート定義
+
+`routes/api.php`
+
+```php:api.php
+Routes::post('/register', 'Auth\RegisterController@register')->name('register');
+```
+
+###### コントローラー
+
+`app/Http/Controllers/Auth/RegisterController.php` の `RegisterController` クラスに `registered` メソッドを追加する。
+
+```php:RgisterController.php
+    protected function registered(Request $request, $user)
+    {
+        return $user;
+    }
+```
+
+###### テストの実施
+
+テストを実施する。
+
+```
+./vendor/bin/phpunit --testdox
+```
+
+##### ログインAPI
+
+

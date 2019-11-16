@@ -11,5 +11,15 @@ const mix = require('laravel-mix');
  |
  */
 
-mix.js('resources/js/app.js', 'public/js')
-    .sass('resources/sass/app.scss', 'public/css');
+mix.browserSync({
+  files: [
+    "resources/views/welcome.blade.php",
+    "public/css/app.css",
+    "public/js/app.js"
+  ],
+  proxy: {
+    target: "http://picture_uploader.test/"
+  }
+}).js('resources/js/app.js', 'public/js')
+  .sass('resources/sass/app.scss', 'public/css')
+  .version();
