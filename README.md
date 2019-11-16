@@ -168,7 +168,7 @@ trim_trailing_whitespace = true
 [*.md]
 trim_trailing_whitespace = false
 
-[*.{yml,yaml,js,json,html,scss,css,blade.php}]
+[*.{yml,yaml,js,json,html,scss,css,vue,blade.php}]
 indent_size = 2
 ```
 
@@ -263,6 +263,28 @@ new Vue({
 npm install -D vue-router
 ```
 
+#### ルートコンポーネントの作成
+
+`resources/js/App.vue` を作成する
+
+```
+touch resources/js/App.js
+```
+
+
+`resources/js/App.vue` を編集する
+
+```js:App.vue
+<template>
+  <div>
+    <main>
+      <div class="container">
+        <RouterView />
+      </div>
+    </main>
+  </div>
+</template>
+```
 
 ---
 
