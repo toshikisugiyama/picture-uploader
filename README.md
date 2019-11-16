@@ -286,6 +286,32 @@ touch resources/js/App.js
 </template>
 ```
 
+#### ページコンポーネント
+
+`resources/js/pages` を作成する
+
+```
+mkdir resources/js/pages
+```
+
+`resources/js/pages/PhotoList.vue` と `resources/js/pages/Login.vue` を作成する
+
+```
+touch resources/js/pages/{PhotoList,Login}.vue
+```
+
+```js:Login.vue
+<template>
+  <h1>Login</h1>
+</template>
+```
+
+```js:PhotoList.vue
+<template>
+  <h1>Photo List</h1>
+</template>
+```
+
 ---
 
 ### API 用のルート
