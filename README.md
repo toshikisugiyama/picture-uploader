@@ -300,17 +300,88 @@ mkdir resources/js/pages
 touch resources/js/pages/{PhotoList,Login}.vue
 ```
 
+##### Login.vue の編集
+
+`resources/js/pages/Login.vue`
+
 ```js:Login.vue
 <template>
   <h1>Login</h1>
 </template>
 ```
 
+##### PhotoList.vue の編集
+
+`resources/js/pages/PhotoList.vue`
+
 ```js:PhotoList.vue
 <template>
   <h1>Photo List</h1>
 </template>
 ```
+
+#### ルーティング
+
+##### router.js
+
+`resources/js/router.js` を作成する
+
+```
+touch resources/js/router.js
+```
+
+`resources/js/router.js` を編集する
+
+```js:router.js
+import Vue from'vue'
+import VueRouter from 'vue-router'
+
+import PhotoList from './pages/PhotoList.vue'
+import Login from './pages/Login.vue'
+
+Vue.use(VueRouter)
+
+const routes = [
+  {
+    path: '/',
+    component: PhotoList
+  },
+  {
+    path: '/login',
+    component: Login
+  }
+]
+
+const router = new VueRouter({
+  mode: 'history',
+  routes
+})
+
+export default router
+```
+
+history モードを使うとURLに`#`が付かなくなる。
+
+##### app.js
+
+`resources/js/app.js` を編集する
+
+```js:app.js
+import Vue from 'vue'
+import router from './router'
+import App from './App.vue'
+
+new Vue({
+  el: '#app',
+  router,
+  components: {App},
+  template: '<App />'
+})
+```
+
+`/` で `PhotoList` ページ、
+
+`/login` で `Login` ページにアクセスできる。
 
 ---
 
