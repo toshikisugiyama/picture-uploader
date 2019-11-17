@@ -475,7 +475,10 @@ protected function mapApiRoutes()
 ```
 php artisan make:test RegisterApiTest
 ```
+
 `RegisterApiTest.php` を編集する。
+
+
 ```php:RegisterApiTest.php
 <?php
 
@@ -525,6 +528,9 @@ Routes::post('/register', 'Auth\RegisterController@register')->name('register');
         return $user;
     }
 ```
+
+↑ `use Illuminate\Http\Request;` も忘れずに書いておく。
+
 
 ##### テストの実施
 
