@@ -605,3 +605,62 @@ Route::post('/login', 'Auth\LoginController@login')->name('login');
 ```
 `use Illuminate\Http\Request;` を忘れずに書く。
 
+#### ログアウトAPI
+
+```
+php artisan make:test LogoutApiTest
+```
+
+`tests/Feature/LogoutApiTest.php`
+
+```php:LogoutApiTest.php
+<?php
+
+namespace Tests\Feature;
+
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\WithFaker;
+use Tests\TestCase;
+use App\User;
+
+class LogoutApiTest extends TestCase
+{
+    use RefreshDatabase;
+    /**
+     * @return void
+     */
+    public function setUp(): void
+    {
+        parent::setUp();
+        $this->user = factory(User::class)->create();
+    }
+
+    /**
+     * @test
+     */
+    public function should_認証済みのユーザーをログアウトさせる()
+    {
+        $response = $this->actingAs($this->user)->json('POST', route('logout'));
+        $response->assertStatus(200);
+        $this->assertGuest();
+    }
+}
+```
+
+`routes/api.php` に以下を追加
+
+```php:api.php
+Route::post('/logout', 'Auth\LoginController@logout')->name('logout');
+```
+
+`app/Http/Controllers/Auth/LoginController.php` を編集
+
+`LoginController` クラスに以下を追加
+
+```php:LoginController.php
+    protected function loggedOut(Request $request)
+    {
+        $request->session()->regenerate();
+        return response()->json();
+    }
+```
