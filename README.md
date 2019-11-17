@@ -410,10 +410,66 @@ protected function mapApiRoutes()
 ```
 
 ---
+### テストの準備
 
-#### テストコード
+#### インメモリのSQLite
 
-##### 会員登録API
+##### `config/database.php` の `connections` に追加する。
+
+`config/database.php`
+
+```php:database.php
+'sqlite_testing' => [
+    'driver' => 'sqlite',
+    'database' => ':memory:',
+    'prefix' => '',
+],
+```
+
+##### `phpunit.xml` を編集
+
+`<server name="DB_CONNECTION" value="sqlite_testing"/>` を追加する。
+
+```xml:phpunit.xml
+<?xml version="1.0" encoding="UTF-8"?>
+<phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:noNamespaceSchemaLocation="./vendor/phpunit/phpunit/phpunit.xsd"
+         backupGlobals="false"
+         backupStaticAttributes="false"
+         bootstrap="vendor/autoload.php"
+         colors="true"
+         convertErrorsToExceptions="true"
+         convertNoticesToExceptions="true"
+         convertWarningsToExceptions="true"
+         processIsolation="false"
+         stopOnFailure="false">
+    <testsuites>
+        <testsuite name="Unit">
+            <directory suffix="Test.php">./tests/Unit</directory>
+        </testsuite>
+
+        <testsuite name="Feature">
+            <directory suffix="Test.php">./tests/Feature</directory>
+        </testsuite>
+    </testsuites>
+    <filter>
+        <whitelist processUncoveredFilesFromWhitelist="true">
+            <directory suffix=".php">./app</directory>
+        </whitelist>
+    </filter>
+    <php>
+        <server name="APP_ENV" value="testing"/>
+        <server name="DB_CONNECTION" value="sqlite_testing"/>
+        <server name="BCRYPT_ROUNDS" value="4"/>
+        <server name="CACHE_DRIVER" value="array"/>
+        <server name="MAIL_DRIVER" value="array"/>
+        <server name="QUEUE_CONNECTION" value="sync"/>
+        <server name="SESSION_DRIVER" value="array"/>
+    </php>
+</phpunit>
+```
+
+#### 会員登録API
 会員登録APIのテストケースを作成する
 
 ```
@@ -451,7 +507,7 @@ class RegisterApiTest extends TestCase
     }
 }
 ```
-###### ルート定義
+##### ルート定義
 
 `routes/api.php`
 
@@ -459,7 +515,7 @@ class RegisterApiTest extends TestCase
 Routes::post('/register', 'Auth\RegisterController@register')->name('register');
 ```
 
-###### コントローラー
+##### コントローラー
 
 `app/Http/Controllers/Auth/RegisterController.php` の `RegisterController` クラスに `registered` メソッドを追加する。
 
@@ -470,7 +526,7 @@ Routes::post('/register', 'Auth\RegisterController@register')->name('register');
     }
 ```
 
-###### テストの実施
+##### テストの実施
 
 テストを実施する。
 
