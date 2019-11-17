@@ -540,6 +540,68 @@ Routes::post('/register', 'Auth\RegisterController@register')->name('register');
 ./vendor/bin/phpunit --testdox
 ```
 
-##### ログインAPI
+#### ログインAPI
 
+```
+php artisan make:test LoginApiTest
+```
+
+`test/Feature/LoginApiTest.php` を編集
+
+```php:LoginApiTest.php
+<?php
+
+namespace Tests\Feature;
+
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\WithFaker;
+use Tests\TestCase;
+use App\User;
+
+class LoginApiTest extends TestCase
+{
+    use RefreshDatabase;
+    /**
+     * @return void
+     */
+    public function setUp(): void
+    {
+        parent::setUp();
+        $this->user = factory(User::class)->create();
+    }
+
+    /**
+     * @test
+     */
+    public function should_登録済みのユーザーを認証して返却する()
+    {
+        $response = $this->json('POST', route('login'), [
+            'email' => $this->user->email,
+            'password' => 'password',
+        ]);
+        $response
+            ->assertStatus(200)
+            ->assertJson(['name' => $this->user->name]);
+        $this->assertAuthenticatedAs($this->user);
+    }
+}
+```
+
+`routes/api.php` に以下を追加
+
+```php:api.php
+Route::post('/login', 'Auth\LoginController@login')->name('login');
+```
+
+`app/Http/Controllers/Auth/LoginController.php` を編集
+
+`LoginController` クラスに以下を追加する
+
+```php:LoginController.php
+    protected function authenticated(Request $request, $user)
+    {
+        return $user;
+    }
+```
+`use Illuminate\Http\Request;` を忘れずに書く。
 
