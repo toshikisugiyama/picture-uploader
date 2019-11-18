@@ -704,3 +704,54 @@ mkdir resources/js/components && touch resources/js/components/Navbar.vue
   </nav>
 </template>
 ```
+
+#### `Footer.vue` を作成する
+
+```
+touch resources/js/components/Footer.vue
+```
+
+`resources/js/components/Footer.vue`
+
+```js:Footer.vue
+<template>
+  <footer class="footer">
+    <button class="button">Logout</button>
+    <RouterLink class="button" to="/login">
+      Login /Register
+    </RouterLink>
+  </footer>
+</template>
+```
+
+#### `App.vue` の編集
+
+`resources/js/App.vue`
+
+```js:App.vue
+<template>
+  <div>
+    <header>
+      <Navbar />
+    </header>
+    <main>
+      <div class="container">
+        <RouterView />
+      </div>
+    </main>
+    <Footer />
+  </div>
+</template>
+
+<script>
+import Navbar from './components/Navbar.vue'
+import Footer from './components/Footer.vue'
+
+export default {
+  components: {
+    Navbar,
+    Footer
+  }
+}
+</script>
+```
