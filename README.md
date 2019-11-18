@@ -784,8 +784,86 @@ export default {
         Register
       </li>
     </ul>
-    <div v-show="tab === 0">Login Form</div>
-    <div v-show="tab === 1">Register Form</div>
+    <div v-show="tab === 0">
+      <form class="form" @submit.prevent="login">
+        <div class="form-contents">
+          <div class="form-items">
+            <label for="email">Email</label>
+            <input
+              type="text"
+              class="form-item"
+              id="email"
+              autocomplete="email"
+              v-model="loginForm.email"
+            >
+          </div>
+          <div class="form-items">
+            <label for="password">Password</label>
+            <input
+              type="text"
+              class="form-item"
+              id="password"
+              autocomplete="current-password"
+              v-model="loginForm.password"
+            >
+          </div>
+        </div>
+        <div type="form-button">
+          <button type="submit">login</button>
+        </div>
+      </form>
+    </div>
+    <div v-show="tab === 1">
+      <div>
+        <form class="form" @submit.prevent="register">
+          <div class="form-contents">
+            <div class="form-items">
+              <label for="username">Name</label>
+              <input
+                type="text"
+                class="form-item"
+                id="username"
+                autocomplete="username"
+                v-model="registerForm.name"
+              >
+            </div>
+            <div class="form-items">
+              <label for="email">Email</label>
+              <input
+                type="text"
+                class="form-item"
+                id="email"
+                autocomplete="email"
+                v-model="registerForm.email"
+              >
+            </div>
+            <div class="form-items">
+              <label for="password">Password</label>
+              <input
+                type="password"
+                class="form-item"
+                id="password"
+                autocomplete="new-password"
+                v-model="registerForm.password"
+              >
+            </div>
+            <div class="form-items">
+              <label for="password-confirmation">Name</label>
+              <input
+                type="password"
+                class="form-item"
+                id="password-confirmation"
+                autocomplete="new-password"
+                v-model="registerForm.password_confirmation"
+              >
+            </div>
+          </div>
+          <div class="form-button">
+            <button type="submit" >Rgister</button>
+          </div>
+        </form>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -793,7 +871,25 @@ export default {
 export default {
   data(){
     return {
-      tab: 0
+      tab: 0,
+      loginForm: {
+        email: '',
+        password: ''
+      },
+      registerForm: {
+        name: '',
+        email: '',
+        password: '',
+        password_confirmation: '',
+      }
+    }
+  },
+  methods: {
+    login(){
+      console.log(this.loginForm)
+    },
+    register(){
+      console.log(this.registerForm)
     }
   }
 }
