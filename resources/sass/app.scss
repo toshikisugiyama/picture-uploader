@@ -1,1 +1,65 @@
-//
+@import "~html5-reset";
+
+$side: 0 150px;
+@mixin contents {
+  display: flex;
+  align-items: center;
+}
+
+a, a:visited {
+  text-decoration: none;
+}
+nav {
+  @include contents;
+  padding: $side;
+  height: 70px;
+  justify-content: space-between;
+  .navbar-menu {
+    @include contents;
+    justify-content: center;
+    .navbar-item {
+      margin: 0 30px;
+    }
+    .navbar-item:last-child {
+      margin-right: 0;
+    }
+  }
+}
+.login {
+  @include contents;
+  padding: $side;
+  flex-direction: column;
+  .tab {
+    @include contents;
+    margin: 100px auto 0;
+    .tab-item {
+      color: #777;
+    }
+    .tab-item.active {
+      color: #fff;
+      background-color: #777;
+    }
+  }
+  .form {
+    @include contents;
+    flex-direction: column;
+    margin: 25px auto 50px;
+    &-contents {
+      .form-items {
+        @include contents;
+        justify-content: space-between;
+        .form-item {
+          margin: 5px 0 5px 10px;
+        }
+      }
+    }
+    &-button {
+      margin: 25px auto;
+    }
+  }
+}
+footer {
+  @include contents;
+  padding: $side;
+  justify-content: center;
+}
