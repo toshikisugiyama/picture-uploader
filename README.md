@@ -410,6 +410,7 @@ protected function mapApiRoutes()
 ```
 
 ---
+
 ### テストの準備
 
 #### インメモリのSQLite
@@ -603,7 +604,7 @@ Route::post('/login', 'Auth\LoginController@login')->name('login');
         return $user;
     }
 ```
-`use Illuminate\Http\Request;` を忘れずに書く。
+↑ `use Illuminate\Http\Request;` を忘れずに書く。
 
 #### ログアウトAPI
 
@@ -663,4 +664,43 @@ Route::post('/logout', 'Auth\LoginController@logout')->name('logout');
         $request->session()->regenerate();
         return response()->json();
     }
+```
+
+---
+
+### ヘッダーとフッター
+
+#### ヘッダーコンポーネント
+
+##### `Navbar.vue` を作成する
+
+```
+mkdir resources/js/components && touch resources/js/components/Navbar.vue
+```
+
+`resources/js/components/Navbar.vue` 
+
+```js:Navbar.vue
+<template>
+  <nav class="navbar">
+    <RouterLink to="/">
+      Picture Uploader
+    </RouterLink>
+    <div class="navbar-menu">
+      <div class="navbar-item">
+        <button class="button">
+          Submit a photo
+        </button>
+      </div>
+      <span class="navbar-item">
+        username
+      </span>
+      <div class="navbar-item">
+        <RouterLink class="button" to="/login">
+          Login / Register
+        </RouterLink>
+      </div>
+    </div>
+  </nav>
+</template>
 ```
