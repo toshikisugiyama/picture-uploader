@@ -971,3 +971,53 @@ new Vue({
   template: '<App />'
 })
 ```
+
+---
+
+### CSRF対策
+
+`resources/js/util.js` を作成する。
+
+```
+touch resources/js/util.js
+```
+
+`resources/js/util.js` を編集する。
+
+```js:util.js
+/**
+ * @param {String} searchKey 検索するキー
+ * @returns {String} キーに対応する値
+ */
+export function getCookieValue(serchKey){
+  if (typeof serchKey === 'undefined') {
+    return ''
+  }
+  let val = ''
+  document.cookie.split(';').forEach(cookie=>{
+    const [key, value] = cookie.split('=')
+    if (key === searchKey) {
+      return val = value
+    }
+  })
+  return val
+}
+```
+
+`resources/js/bootstrap.js` に以下を追加する。
+
+```js:bootstrap.js
+import { getCookieValue } from './util'
+
+window.axios.interceptors.request.use(config=>{
+  config.headers['X-XSRF-TOKEN'] = getCookieValue('XSRF-TOKEN')
+  return config
+})
+```
+
+`resources/js/app.js` に以下を追加する。
+
+```js:app.js
+import './bootstrap'
+```
+
