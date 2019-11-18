@@ -895,3 +895,79 @@ export default {
 }
 </script>
 ```
+
+---
+
+### Vuexの導入
+
+#### インストール
+
+```
+npm install --save-dev vuex
+```
+
+#### ストアの作成
+
+`resources/js/store/auth.js` の作成
+
+```
+mkdir resources/js/store && touch resources/js/store/auth.js
+```
+
+`resources/js/store/auth.js` の編集
+
+```js:auth.js
+const state = {}
+const getters = {}
+const mutations = {}
+const actions = {}
+
+export default {
+  namespaced: true,
+  state,
+  getters,
+  mutations,
+  actions
+}
+```
+
+`resources/js/store/index.js` の作成
+
+```
+touch resources/js/store/index.js
+```
+
+`resources/js/store/index.js` の編集
+
+```js:index.js
+import Vue from 'vue'
+import Vuex from 'vuex'
+import auth from './auth'
+
+Vue.use(Vuex)
+
+const store = new Vuex.Store({
+  modules: {
+    auth
+  }
+})
+
+export default store
+```
+
+`resources/js/app.js` でストアを読み込む。
+
+```js:app.js
+import Vue from 'vue'
+import router from './router'
+import App from './App.vue'
+import store from './store'
+
+new Vue({
+  el: '#app',
+  router,
+  store,
+  components: {App},
+  template: '<App />'
+})
+```
