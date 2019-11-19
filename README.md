@@ -1078,9 +1078,43 @@ const actions = {
 
 `resources/js/pages/Login.vue ` の `register` メソッドを編集する。
 
-```js:Login.vue
+```js
 async register(){
     await this.$store.dispatch('auth/register', this.registerForm)
+    this.$router.push('/')
+}
+```
+
+---
+
+### ログイン
+
+##### アクション
+
+`login` アクションを追加
+
+`resources/js/store/auth.js`
+
+```js:auth.js
+const actions = {
+  async register(context, data){
+    const response = await axios.post('/api/register', data)
+    context.commit('setUser', response.data)
+  },
+  async login(context, data){
+    const response = await axios.post('/api/login', data)
+    context.commit('setUser', response.data)
+  }
+}
+```
+
+#### コンポーネントの実装
+
+`resources/js/pages/Login.vue ` の `login` メソッドを編集する。
+
+```js
+async login(){
+    await this.$store.dispatch('auth/login', this.registerForm)
     this.$router.push('/')
 }
 ```
