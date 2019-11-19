@@ -989,8 +989,8 @@ touch resources/js/util.js
  * @param {String} searchKey 検索するキー
  * @returns {String} キーに対応する値
  */
-export function getCookieValue(serchKey){
-  if (typeof serchKey === 'undefined') {
+export function getCookieValue(searchKey){
+  if (typeof searchKey === 'undefined') {
     return ''
   }
   let val = ''
@@ -1021,3 +1021,60 @@ window.axios.interceptors.request.use(config=>{
 import './bootstrap'
 ```
 
+---
+
+### 会員登録
+
+#### マイグレーション
+
+```
+php artisan migrate
+```
+
+#### ストアの実装
+
+##### ステート
+
+`user` を追加
+
+```js:auth.js
+const state = {
+    user: null
+}
+```
+
+##### ミューテーション
+
+`setUser` を追加
+
+```js:auth.js
+const mutations = {
+  setUser(state, user){
+    state.user = user
+  }
+}
+```
+
+##### アクション
+
+`register` アクションを追加
+
+```js:auth.js
+const actions = {
+  async register(context, data){
+    const response = await axios.post('/api/register', data)
+    context.commit('setUser', response.data)
+  }
+}
+```
+
+#### コンポーネントの実装
+
+`resources/js/pages/Login.vue ` の `register` メソッドを編集する。
+
+```js:Login.vue
+async register(){
+    await this.$store.dispatch('auth/register', this.registerForm)
+    this.$router.push('/')
+}
+```
