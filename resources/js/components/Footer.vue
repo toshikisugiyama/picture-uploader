@@ -1,8 +1,8 @@
 <template>
   <footer class="footer">
-    <button class="button" @click="logout">Logout</button>
-    <RouterLink class="button" to="/login">
-      Login /Register
+    <button v-if="isLogin" class="button" @click="logout">Logout</button>
+    <RouterLink v-else class="button" to="/login">
+      Login / Register
     </RouterLink>
   </footer>
 </template>
@@ -13,6 +13,11 @@ export default {
     async logout(){
       await this.$store.dispatch('auth/logout')
       this.$router.push('/login')
+    }
+  },
+  computed: {
+    isLogin(){
+      return this.$store.getters['auth/check']
     }
   }
 }

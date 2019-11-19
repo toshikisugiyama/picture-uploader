@@ -1,10 +1,10 @@
-import Axios from "axios"
-import { longStackSupport } from "q"
-
 const state = {
   user: null
 }
-const getters = {}
+const getters = {
+  check: state => !! state.user,
+  username: state => state.user ? state.user.name : ''
+}
 const mutations = {
   setUser(state, user){
     state.user = user

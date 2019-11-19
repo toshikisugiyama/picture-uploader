@@ -1168,5 +1168,92 @@ export default {
 }
 </script>
 ```
+---
+
+### ステートによる要素の出し分け
+
+#### ゲッターの追加
+
+`resources/js/store/auth.js` にゲッターを追加する。
+
+```js:auth.js
+const getters = {
+  check: state => !! state.user,
+  username: state => state.user ? state.user.name : ''
+}
+```
+
+#### ナビゲーションバー
+
+`resources/js/components/Navbar.vue`
+
+```js:Navbar.vue
+<template>
+  <nav class="navbar">
+    <RouterLink to="/">
+      Picture Uploader
+    </RouterLink>
+    <div class="navbar-menu">
+      <div v-if="isLogin" class="navbar-item">
+        <button class="button">
+          Submit a photo
+        </button>
+      </div>
+      <span v-if="isLogin" class="navbar-item">
+        {{ username }}
+      </span>
+      <div v-else class="navbar-item">
+        <RouterLink class="button" to="/login">
+          Login / Register
+        </RouterLink>
+      </div>
+    </div>
+  </nav>
+</template>
+
+<script>
+export default {
+  computed: {
+    isLogin(){
+      return this.$store.getters['auth/check']
+    },
+    username(){
+      return this.$store.getters['auth/username']
+    }
+  }
+}
+</script>
+```
+
+#### フッター
+
+`resources/js/components/Footer.vue`
+
+```js:Footer.vue
+<template>
+  <footer class="footer">
+    <button v-if="isLogin" class="button" @click="logout">Logout</button>
+    <RouterLink v-else class="button" to="/login">
+      Login / Register
+    </RouterLink>
+  </footer>
+</template>
+
+<script>
+export default {
+  methods: {
+    async logout(){
+      await this.$store.dispatch('auth/logout')
+      this.$router.push('/login')
+    }
+  },
+  computed: {
+    isLogin(){
+      return this.$store.getters['auth/check']
+    }
+  }
+}
+</script>
+```
 
 
