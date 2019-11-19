@@ -1078,7 +1078,7 @@ const actions = {
 
 `resources/js/pages/Login.vue ` の `register` メソッドを編集する。
 
-```js
+```js:Login.vue
 async register(){
     await this.$store.dispatch('auth/register', this.registerForm)
     this.$router.push('/')
@@ -1110,7 +1110,7 @@ const actions = {
 
 #### コンポーネントの実装
 
-`resources/js/pages/Login.vue ` の `login` メソッドを編集する。
+`resources/js/pages/Login.vue` の `login` メソッドを編集する。
 
 ```js
 async login(){
@@ -1118,3 +1118,55 @@ async login(){
     this.$router.push('/')
 }
 ```
+---
+
+### ログアウト
+
+#### アクション
+
+`resources/js/store/auth.js`
+
+```js:auth.js
+const actions = {
+  async register(context, data){
+    const response = await axios.post('/api/register', data)
+    context.commit('setUser', response.data)
+  },
+  async login(context, data){
+    const response = await axios.post('/api/login', data)
+    context.commit('setUser', response.data)
+  },
+  async logout(context){
+    const response = await axios.post('/api/logout')
+    context.commit('setUser', null)
+  }
+}
+```
+
+#### コンポーネントの実装
+
+`resources/js/components/Footer.vue`
+
+```js:Footer.vue
+<template>
+  <footer class="footer">
+    <button class="button" @click="logout">Logout</button>
+    <RouterLink class="button" to="/login">
+      Login /Register
+    </RouterLink>
+  </footer>
+</template>
+
+<script>
+export default {
+  methods: {
+    async logout(){
+      await this.$store.dispatch('auth/logout')
+      this.$router.push('/login')
+    }
+  }
+}
+</script>
+```
+
+
