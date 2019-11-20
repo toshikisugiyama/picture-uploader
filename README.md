@@ -1442,4 +1442,66 @@ class RedirectIfAuthenticated
     }
 }
 ```
+---
+
+### ナビゲーションガード
+
+ログイン状態でログインページにアクセスした場合は、トップページに移動させるようにする。
+
+[グローバルガード](https://router.vuejs.org/ja/guide/advanced/navigation-guards.html#%E3%82%B0%E3%83%AD%E3%83%BC%E3%83%90%E3%83%AB%E3%82%AC%E3%83%BC%E3%83%89)
+
+> リダイレクトもしくはキャンセルによって遷移をガードするために主に使用されます。
+
+#### ルート定義にナビゲーション
+
+`resources/js/router.js` で `store` を読み込む。
+
+```js:router.js
+import Vue from'vue'
+import VueRouter from 'vue-router'
+
+import PhotoList from './pages/PhotoList.vue'
+import Login from './pages/Login.vue'
+
+import store from './store'
+
+Vue.use(VueRouter)
+
+const routes = [
+  {
+    path: '/',
+    component: PhotoList
+  },
+  {
+    path: '/login',
+    component: Login,
+    beforeEnter(to, from, next){
+      if(store.getters['auth/check']){
+        next('/')
+      } else {
+        next()
+      }
+    }
+  }
+]
+
+const router = new VueRouter({
+  mode: 'history',
+  routes
+})
+
+export default router
+```
+
+`beforeEnter` 関数を使う。
+
+- 第一引数 `to` はアクセスされようとしているルートのルートオブジェクト
+- 第二引数 `from` はアクセス元のルート
+- 第三引数 `next` はページの繊維先を決める関数
+
+`next` の引数を指定しなければ、そのままページコンポーネントが切り替わる。
+
+引数を指定して `next()` を呼ぶと、切り替わるはずだったページコンポーネントは生成されずに、引数のページに切り替わる。
+
+
 
