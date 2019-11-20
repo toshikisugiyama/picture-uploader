@@ -1825,3 +1825,306 @@ computed: {
         </ul>
     </div>
 ```
+
+---
+
+### ログイン以外の機能にも適用
+
+#### bootstrap
+
+`resources/js/bootstrap.js` でレスポンスを受けた後の処理を上書きする。
+
+- 第一引数が成功した時の処理。そのまま `response` を返す。
+- 第二引数が失敗した時の処理。
+
+```js:bootstrap.js
+window.axios.interceptors.response.use(
+  response => response,
+  error => error.response || error
+)
+```
+
+#### authストア
+
+`resources/js/store/auth.js`
+
+```js:auth.js
+import {OK,CREATED,UNPROCESSABLE_ENTITY} from '../util'
+
+const state = {
+  user: null,
+  apiStatus: null,
+  loginErrorMessages: null,
+  RegisterErrorMessages: null,
+}
+const getters = {
+  check: state => !! state.user,
+  username: state => state.user ? state.user.name : ''
+}
+const mutations = {
+  setUser(state, user){
+    state.user = user
+  },
+  setApiStatus(state, status){
+    state.apiStatus = status
+  },
+  setLoginErrorMessages(state, messages){
+    state.loginErrorMessages = messages
+  },
+  setRegisterErrorMessages(state, messages){
+    state.RegisterErrorMessages = messages
+  }
+}
+const actions = {
+  // 会員登録
+  async register(context, data){
+    context.commit('setApiStatus', null)
+    const response = await axios.post('/api/register', data)
+    if (response.status === CREATED) {
+      context.commit('setApiStatus', true)
+      context.commit('setUser', response.data)
+      return false
+    }
+    context.commit('setApiStatus', false)
+    if (response.status === UNPROCESSABLE_ENTITY) {
+      context.commit('setRegisterErrorMessages', response.data.errors)
+    } else {
+      context.commit('error/setCode', response.status, {root: true})
+    }
+  },
+  // ログイン
+  async login(context, data){
+    context.commit('setApiStatus', null)
+    const response = await axios.post('/api/login', data).catch(err => err.response || err)
+    if (response.status === OK) {
+      context.commit('setApiStatus', true)
+      context.commit('setUser', response.data)
+      return false
+    }
+    context.commit('setApiStatus', false)
+    if (response.status === UNPROCESSABLE_ENTITY) {
+      context.commit('setLoginErrorMessages', response.data.errors)
+    } else {
+      context.commit('error/setCode', response.status, {root: true})
+    }
+  },
+  // ログアウト
+  async logout(context){
+    context.commit('setApiStatus', null)
+    const response = await axios.post('/api/logout')
+    if (response.status === OK) {
+      context.commit('setApiStatus', true)
+      context.commit('setUser', null)
+      return false
+    }
+    context.commit('setApiStatus', false)
+    context.commit('error/setCode', response.status, {root: true})
+  },
+  // ログインユーザーチェック
+  async currentUser(context){
+    context.commit('setApiStatus', null)
+    const response = await axios.get('/api/user')
+    const user = response.data || null
+    if (response.status === OK) {
+      context.commit('setApiStatus', true)
+      context.commit('setUser', user)
+      return false
+    }
+    context.commit('setApiStatus', false)
+    context.commit('error/setCode', response.status, {root: true})
+  }
+}
+
+export default {
+  namespaced: true,
+  state,
+  getters,
+  mutations,
+  actions
+}
+```
+
+#### 会員登録 & ログアウト
+
+`resources/js/pages/Login.vue`
+
+```js:Login.vue
+<template>
+  <div class="login">
+    <ul class="tab">
+      <li
+        class="tab-item"
+        :class="{'active':(tab === 0)}"
+        @click="tab=0"
+      >
+        Login
+      </li>
+      <li
+        class="tab-item"
+        :class="{'active':(tab === 1)}"
+        @click="tab=1"
+      >
+        Register
+      </li>
+    </ul>
+    <div v-show="tab === 0">
+      <form class="form" @submit.prevent="login">
+        <div v-if="loginErrors" class="errors">
+          <ul v-if="loginErrors.email">
+            <li v-for="msg in loginErrors.email" :key="msg">{{ msg }}</li>
+          </ul>
+          <ul v-if="loginErrors.password">
+            <li v-for="msg in loginErrors.password" :key="msg">{{ msg }}</li>
+          </ul>
+        </div>
+        <div class="form-contents">
+          <div class="form-items">
+            <label for="email">Email</label>
+            <input
+              type="text"
+              class="form-item"
+              id="email"
+              autocomplete="email"
+              v-model="loginForm.email"
+            >
+          </div>
+          <div class="form-items">
+            <label for="password">Password</label>
+            <input
+              type="text"
+              class="form-item"
+              id="password"
+              autocomplete="current-password"
+              v-model="loginForm.password"
+            >
+          </div>
+        </div>
+        <div type="form-button">
+          <button type="submit">login</button>
+        </div>
+      </form>
+    </div>
+    <div v-show="tab === 1">
+      <div>
+        <form class="form" @submit.prevent="register">
+          <div class="form-contents">
+            <div v-if="registerErrors" class="errors">
+              <ul v-if="registerErrors.name">
+                <li v-for="msg in registerErrors.name" :key="msg">{{ msg }}</li>
+              </ul>
+              <ul v-if="registerErrors.email">
+                <li v-for="msg in registerErrors.email" :key="msg">{{ msg }}</li>
+              </ul>
+              <ul v-if="registerErrors.password">
+                <li v-for="msg in registerErrors.password" :key="msg">{{ msg }}</li>
+              </ul>
+            </div>
+            <div class="form-items">
+              <label for="username">Name</label>
+              <input
+                type="text"
+                class="form-item"
+                id="username"
+                autocomplete="username"
+                v-model="registerForm.name"
+              >
+            </div>
+            <div class="form-items">
+              <label for="email">Email</label>
+              <input
+                type="text"
+                class="form-item"
+                id="email"
+                autocomplete="email"
+                v-model="registerForm.email"
+              >
+            </div>
+            <div class="form-items">
+              <label for="password">Password</label>
+              <input
+                type="password"
+                class="form-item"
+                id="password"
+                autocomplete="new-password"
+                v-model="registerForm.password"
+              >
+            </div>
+            <div class="form-items">
+              <label for="password-confirmation">Name</label>
+              <input
+                type="password"
+                class="form-item"
+                id="password-confirmation"
+                autocomplete="new-password"
+                v-model="registerForm.password_confirmation"
+              >
+            </div>
+          </div>
+          <div class="form-button">
+            <button type="submit" >Rgister</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</template>
+
+<script>
+import {mapState, mapGetters} from 'vuex'
+export default {
+  data(){
+    return {
+      tab: 0,
+      loginForm: {
+        email: '',
+        password: ''
+      },
+      registerForm: {
+        name: '',
+        email: '',
+        password: '',
+        password_confirmation: '',
+      }
+    }
+  },
+  methods: {
+    async logout(){
+      await this.$store.dispatch('auth/logout')
+      if (this.apiStatus) {
+        this.$router.push('/login')
+      }
+    },
+    async login(){
+      await this.$store.dispatch('auth/login', this.loginForm)
+      if (this.apiStatus) {
+        this.$router.push('/')
+      }
+    },
+    async register(){
+      await this.$store.dispatch('auth/register', this.registerForm)
+      if (this.apiStatus) {
+        this.$router.push('/')
+      }
+    },
+    clearError(){
+      this.$store.commit('auth/setLoginErrorMessages', null)
+      this.$store.commit('auth/registerErrorMessages', null)
+    }
+  },
+  created(){
+    this.clearError()
+  },
+  computed: {
+    ...mapState({
+      apiStatus: state => state.auth.apiStatus,
+      loginErrors: state => state.auth.loginErrorMessages,
+      registerErrors: state => state.auth.registerErrorMessages,
+    }),
+    ...mapGetters({
+      isLogin: 'auth/check'
+    }),
+  },
+}
+</script>
+```
+

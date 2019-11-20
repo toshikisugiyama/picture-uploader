@@ -57,6 +57,17 @@
       <div>
         <form class="form" @submit.prevent="register">
           <div class="form-contents">
+            <div v-if="registerErrors" class="errors">
+              <ul v-if="registerErrors.name">
+                <li v-for="msg in registerErrors.name" :key="msg">{{ msg }}</li>
+              </ul>
+              <ul v-if="registerErrors.email">
+                <li v-for="msg in registerErrors.email" :key="msg">{{ msg }}</li>
+              </ul>
+              <ul v-if="registerErrors.password">
+                <li v-for="msg in registerErrors.password" :key="msg">{{ msg }}</li>
+              </ul>
+            </div>
             <div class="form-items">
               <label for="username">Name</label>
               <input
@@ -108,7 +119,7 @@
 </template>
 
 <script>
-import {mapState} from 'vuex'
+import {mapState, mapGetters} from 'vuex'
 export default {
   data(){
     return {
@@ -126,6 +137,12 @@ export default {
     }
   },
   methods: {
+    async logout(){
+      await this.$store.dispatch('auth/logout')
+      if (this.apiStatus) {
+        this.$router.push('/login')
+      }
+    },
     async login(){
       await this.$store.dispatch('auth/login', this.loginForm)
       if (this.apiStatus) {
@@ -134,10 +151,13 @@ export default {
     },
     async register(){
       await this.$store.dispatch('auth/register', this.registerForm)
-      this.$router.push('/')
+      if (this.apiStatus) {
+        this.$router.push('/')
+      }
     },
     clearError(){
       this.$store.commit('auth/setLoginErrorMessages', null)
+      this.$store.commit('auth/registerErrorMessages', null)
     }
   },
   created(){
@@ -147,6 +167,10 @@ export default {
     ...mapState({
       apiStatus: state => state.auth.apiStatus,
       loginErrors: state => state.auth.loginErrorMessages,
+      registerErrors: state => state.auth.registerErrorMessages,
+    }),
+    ...mapGetters({
+      isLogin: 'auth/check'
     }),
   },
 }
