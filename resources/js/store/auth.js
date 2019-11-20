@@ -1,5 +1,8 @@
+import {OK} from '../util'
+
 const state = {
-  user: null
+  user: null,
+  apiStatus: null
 }
 const getters = {
   check: state => !! state.user,
@@ -16,8 +19,15 @@ const actions = {
     context.commit('setUser', response.data)
   },
   async login(context, data){
-    const response = await axios.post('/api/login', data)
-    context.commit('setUser', response.data)
+    context.commit('setApiStatus', null)
+    const response = await axios.post('/api/login', data).catch(err => err.response || err)
+    if (response.status === OK) {
+      context.commit('setApiStatus', true)
+      context.commit('setUser', response.data)
+      return false
+    }
+    context.commit('setApiStatus', false)
+    context.commit('error/setCode', response.status, {root: true})
   },
   async logout(context){
     const response = await axios.post('/api/logout')

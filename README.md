@@ -1503,5 +1503,229 @@ export default router
 
 引数を指定して `next()` を呼ぶと、切り替わるはずだったページコンポーネントは生成されずに、引数のページに切り替わる。
 
+---
 
+### エラーハンドリング
 
+- システムエラー
+- バリデーションエラー
+- 認証エラー
+- Not Found エラー
+
+#### システムエラー
+
+500番エラー（Internal Internal Server Error）
+
+- エラーコンポーネントの追加
+- `error` ストアモジュールを追加
+- `auth` モジュールでエラーが発生したときに `error` モジュールのステートを更新
+- ルートコンポーネント `App.vue` で `error` モジュールのステートを `watch`
+- 特定のエラーコードであればエラーページへ移動
+
+##### システムエラーページ
+
+`resources/js/pages/errors/System.vue` を作成する。
+
+これがシステムエラーページを表すコンポーネント。
+
+```
+mkdir resources/js/pages/errors && touch resources/js/pages/errors/System.vue
+```
+
+```js:System.vue
+<template>
+  <p>システムエラーが発生しました。</p>
+</template>
+```
+
+`resources/js/router.js` にシステムエラーのルート定義を追加する。
+
+```js:router.js
+import Vue from'vue'
+import VueRouter from 'vue-router'
+import PhotoList from './pages/PhotoList.vue'
+import Login from './pages/Login.vue'
+import store from './store'
+import SystemError from './pages/errors/System.vue'
+
+Vue.use(VueRouter)
+
+const routes = [
+  {
+    path: '/',
+    component: PhotoList
+  },
+  {
+    path: '/login',
+    component: Login,
+    beforeEnter(to, from, next){
+      if(store.getters['auth/check']){
+        next('/')
+      } else {
+        next()
+      }
+    }
+  },
+  {
+    path: '/500',
+    component: SystemError,
+  }
+]
+
+const router = new VueRouter({
+  mode: 'history',
+  routes
+})
+
+export default router
+```
+
+##### レスポンスコード定義
+`resources/js/util.js`
+
+```js:util.js
+export const OK = 200
+export const CREATED = 201
+export const INTERNAL_SERVER_ERROR = 500
+```
+
+`resources/js/store/error.js` を作成し、 `error` ストアモジュールを追加する。
+
+```
+touch resources/js/store/error.js
+```
+
+`resources/js/store/error.js`
+
+```js:error.js
+const state = {
+  code: null
+}
+
+const mutations = {
+  setCode(state, code){
+    state.code = code
+  }
+}
+
+export default {
+  namespase: true,
+  state,
+  mutations
+}
+```
+
+`resources/js/store/index.js` で `error` モジュールを読み込む。
+
+```js:indexjs
+import Vue from 'vue'
+import Vuex from 'vuex'
+import auth from './auth'
+import error from './error'
+
+Vue.use(Vuex)
+
+const store = new Vuex.Store({
+  modules: {
+    auth,
+    error,
+  }
+})
+
+export default store
+```
+
+##### auth ストア
+
+API呼び出しが成功したかどうかを示す `apiStatus` ステートを追加する。
+
+`resources/js/store/auth.js` に以下を追加する。
+
+```js:auth.js
+const state = {
+  user: null,
+  apiStatus: null
+}
+```
+
+ステータスコードを読み込む。
+
+`resources/js/store/auth.js`
+
+```js:auth.js
+import {OK} from '../util'
+```
+
+アクションを編集する。
+
+`resources/js/store/auth.js`
+
+```js:auth.js
+async login(context, data){
+  context.commit('setApiStatus', null)
+  const response = await axios.post('/api/login', data).catch(err => err.response || err)
+  if (response.status === OK) {
+    context.commit('setApiStatus', true)
+    context.commit('setUser', response.data)
+    return faulse
+  }
+  context.commit('setApiStatus', faulse)
+  context.commit('error/setCode', response.status, {root: true})
+},
+```
+
+##### ページコンポーネント
+
+通信失敗の場合、( `apiStatus` が `false` の場合) トップページへの移動処理を行わない制御
+
+`resources/js/pages/Login.vue` の算出プロパティで `auth` モジュールの `apiStatus` ステートを参照する。
+
+```js:Login.vue
+computed: {
+  apiStatus(){
+    return this.$store.state.auth.apiStatus
+  }
+},
+```
+
+`resources/js/pages/Login.vue` で `apiStatus` が `true` の場合のみトップページに移動するようにする。
+
+```js:login.vue
+async login(){
+  await this.$store.dispatch('auth/login', this.loginForm)
+  if (this.apiStatus) {
+    this.$router.push('/')
+  }
+},
+```
+
+##### ルートコンポーネント
+
+`resources/js/App.vue` で `error` モジュールのステートを監視し、 `INTERNAL_SERVER_ERROR` の場合に、エラーページへ移動させる。
+
+```js:App.vue
+import {INTERNAL_SERVER_ERROR} from './util'
+```
+
+`INTERNAL_SERVER_ERROR` を読み込み、以下を追加する。
+
+```js:App.vue
+computed: {
+    errorCode(){
+      return this.$store.state.error.code
+    },
+  },
+  watch: {
+    errorCode: {
+      handler(val){
+        if (val === INTERNAL_SERVER_ERROR) {
+          this.$router.push('/500')
+        }
+      },
+      immediate: true
+    },
+    $route(){
+      this.$store.commit('error/setCode', null)
+    },
+  },
+```
