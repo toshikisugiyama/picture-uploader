@@ -1255,5 +1255,191 @@ export default {
 }
 </script>
 ```
+---
 
+### 認証状態の維持
+
+#### ユーザー取得API
+
+##### テスト
+
+```
+php artisan make:test UserApiTest
+```
+
+`tests/Feature/UserApiTest.php` を編集する。
+
+```php:UserApiTest.php
+<?php
+
+namespace Tests\Feature;
+
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\WithFaker;
+use Tests\TestCase;
+use App\User;
+
+class UserApiTest extends TestCase
+{
+    use RefreshDatabase;
+    /**
+     * @return void
+     */
+    public function setUp(): void
+    {
+        parent::setUp();
+        $this->user = factory(User::class)->create();
+    }
+
+    /**
+     * @test
+     */
+    public function should_ログイン中のユーザーを返却する()
+    {
+        $response = $this->actingAs($this->user)->json('GET', route('user'));
+        $response->assertStatus(200)->assertJson([
+            'name' => $this->user->name,
+        ]);
+    }
+
+    /**
+     * @test
+     */
+    public function should_ログインされていない場合は空文字を返却する()
+    {
+        $response = $this->json('GET', route('user'));
+        $response->assertStatus(200);
+        $this->assertEquals("", $response->content());
+    }
+}
+```
+
+##### 実装
+
+`routes/api.php` を編集する。
+
+```php:api.php
+<?php
+
+use Illuminate\Http\Request;
+
+Route::middleware('auth:api')->get('/user', function (Request $request) {
+    return $request->user();
+});
+Route::post('/register', 'Auth\RegisterController@register')->name('register');
+Route::post('/login', 'Auth\LoginController@login')->name('login');
+Route::post('/logout', 'Auth\LoginController@logout')->name('logout');
+Route::get('/user', function(){
+    return Auth::user();
+})->name('user');
+```
+
+#### 起動時のログインチェック
+
+`resources/js/store/auth.js` に `currentUser` アクションを追加する。
+
+```js:auth.js
+const state = {
+  user: null
+}
+const getters = {
+  check: state => !! state.user,
+  username: state => state.user ? state.user.name : ''
+}
+const mutations = {
+  setUser(state, user){
+    state.user = user
+  }
+}
+const actions = {
+  async register(context, data){
+    const response = await axios.post('/api/register', data)
+    context.commit('setUser', response.data)
+  },
+  async login(context, data){
+    const response = await axios.post('/api/login', data)
+    context.commit('setUser', response.data)
+  },
+  async logout(context){
+    const response = await axios.post('/api/logout')
+    context.commit('setUser', null)
+  },
+  async currentUser(context){
+    const response = await axios.get('/api/user')
+    const user = response.data || null
+    context.commit('setUser', user)
+  }
+}
+
+export default {
+  namespaced: true,
+  state,
+  getters,
+  mutations,
+  actions
+}
+```
+
+`resources/js/app.js` を編集し、Vueインスタンス生成前に `currentUser` アクションを呼び出すようにする。
+
+```js:app.js
+import './bootstrap'
+import Vue from 'vue'
+import router from './router'
+import App from './App.vue'
+import store from './store'
+
+const createApp = async() => {
+  await store.dispatch('auth/currentUser')
+  new Vue({
+    el: '#app',
+    router,
+    store,
+    components: {App},
+    template: '<App />'
+  })
+}
+
+createApp()
+```
+
+`currentUser` アクションの非同期処理が終わってからVueインスタンスが生成される。
+
+非同期処理を `await` させるためには、 `async` メソッドの内部にいる必要があるため、起動処理を `createApp` 関数にまとめ、最後に呼び出している。
+
+
+#### ミドルウェア
+
+`app/Http/Middleware/RedirectIfAuthenticated.php`
+
+ログインユーザー返却APIにリダイレクトするように編集する。
+
+```php:RedirectIfAuthenticated.php
+<?php
+
+namespace App\Http\Middleware;
+
+use Closure;
+use Illuminate\Support\Facades\Auth;
+
+class RedirectIfAuthenticated
+{
+    /**
+     * Handle an incoming request.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @param  \Closure  $next
+     * @param  string|null  $guard
+     * @return mixed
+     */
+    public function handle($request, Closure $next, $guard = null)
+    {
+        if (Auth::guard($guard)->check()) {
+            return redirect()->route('user');
+        }
+
+        return $next($request);
+    }
+}
+```
 
