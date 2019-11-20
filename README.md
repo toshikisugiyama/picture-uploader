@@ -1637,14 +1637,21 @@ export default store
 
 ##### auth ストア
 
-API呼び出しが成功したかどうかを示す `apiStatus` ステートを追加する。
-
-`resources/js/store/auth.js` に以下を追加する。
+`resources/js/store/auth.js` に、API呼び出しが成功したかどうかを示す `apiStatus` ステートを追加し、ミューテーションも追加する。
 
 ```js:auth.js
 const state = {
   user: null,
   apiStatus: null
+}
+
+const mutations = {
+  setUser(state, user){
+    state.user = user
+  },
+  setApiStatus(state, status){
+    state.apiStatus = status
+  }
 }
 ```
 
@@ -1728,4 +1735,93 @@ computed: {
       this.$store.commit('error/setCode', null)
     },
   },
+```
+
+#### バリデーションエラー
+
+`auth` ストアモジュールにエラーメッセージを入れるステートを追加して、ページコンポーネント側で参照して表示させる。
+
+##### レスポンスコード定義
+
+Laravel はバリデーションエラーでは422をレスポンスするため、
+
+`resources/js/util.js` にレスポンスコードの定義を追記する。
+
+```js:util.js
+export const UNPROCESSABLE_ENTITY = 422
+```
+
+##### authストア
+
+`resources/js/store/auth.js` でステータスコードを読み込む。
+
+```js:auth.js
+import {OK,UNPROCESSABLE_ENTITY} from '../util'
+```
+
+`resources/js/store/auth.js` で、 `loginErrorMessages` ステートを追加し、ミューテーションも追加する。
+
+```js:auth.js
+const state = {
+  user: null,
+  apiStatus: null,
+  loginErrorMessages: null,
+}
+```
+
+`resources/js/store/auth.js` で、
+
+ステータスコードが `UNPROCESSABLE_ENTITY` の場合は、 `error/setCode` の代わりに、 `setLoginErrorMessages` をエラーメッセージにセットする。
+
+```js:auth.js
+async login(context, data){
+    context.commit('setApiStatus', null)
+    const response = await axios.post('/api/login', data).catch(err => err.response || err)
+    if (response.status === OK) {
+      context.commit('setApiStatus', true)
+      context.commit('setUser', response.data)
+      return false
+    }
+    context.commit('setApiStatus', false)
+    if (response.status === UNPROCESSABLE_ENTITY) {
+      context.commit('setLoginErrorMessages', response.data.errors)
+    } else {
+      context.commit('error/setCode', response.status, {root: true})
+    }
+  },
+```
+
+##### ページコンポーネント
+
+算出プロパティで `loginErrorMessages` を参照する。
+
+`resources/js/pages/Login.vue` で `mapState` を読み込む。
+
+```js:Login.vue
+import {mapState} from 'vuex'
+```
+
+`resources/js/pages/Login.vue` 
+
+```js:Login.vue
+computed: {
+  ...mapState({
+    apiStatus: state => state.auth.apiStatus,
+    loginErrors: state => state.auth.loginErrorMessages,
+  }),
+},
+```
+
+`resources/js/pages/Login.vue` にエラーメッセージの表示欄を追加する。
+
+```js:Login.vue
+<form class="form" @submit.prevent="login">
+    <div v-if="loginErrors" class="errors">
+        <ul v-if="loginErrors.email">
+        <li v-for="msg in loginErrors.email" :key="msg">{{ msg }}</li>
+        </ul>
+        <ul v-if="loginErrors.password">
+        <li v-for="msg in loginErrors.password" :key="msg">{{ msg }}</li>
+        </ul>
+    </div>
 ```

@@ -18,6 +18,14 @@
     </ul>
     <div v-show="tab === 0">
       <form class="form" @submit.prevent="login">
+        <div v-if="loginErrors" class="errors">
+          <ul v-if="loginErrors.email">
+            <li v-for="msg in loginErrors.email" :key="msg">{{ msg }}</li>
+          </ul>
+          <ul v-if="loginErrors.password">
+            <li v-for="msg in loginErrors.password" :key="msg">{{ msg }}</li>
+          </ul>
+        </div>
         <div class="form-contents">
           <div class="form-items">
             <label for="email">Email</label>
@@ -100,6 +108,7 @@
 </template>
 
 <script>
+import {mapState} from 'vuex'
 export default {
   data(){
     return {
@@ -127,11 +136,18 @@ export default {
       await this.$store.dispatch('auth/register', this.registerForm)
       this.$router.push('/')
     },
+    clearError(){
+      this.$store.commit('auth/setLoginErrorMessages', null)
+    }
+  },
+  created(){
+    this.clearError()
   },
   computed: {
-    apiStatus(){
-      return this.$store.state.auth.apiStatus
-    }
+    ...mapState({
+      apiStatus: state => state.auth.apiStatus,
+      loginErrors: state => state.auth.loginErrorMessages,
+    }),
   },
 }
 </script>
