@@ -2102,3 +2102,203 @@ class PhotoSubmitApiTest extends TestCase
 }
 ```
 
+---
+
+### APIの実装
+#### 各ファイルを作成
+
+```
+php artisan make:model -m -c -r Photo
+php artisan make:model -m -c -r Like
+php artisan make:model -m -c -r Comment
+```
+
+#### マイグレーション
+
+photos, likes, comments table マイグレーションファイルを編集し、実行する。
+
+```
+php artisan migrate:fresh
+```
+
+#### モデル
+`app/Photo.php`
+
+```php:Photo.php
+<?php
+
+namespace App;
+
+use Illuminate\Database\Eloquent\Model;
+
+class Photo extends Model
+{
+    /**
+     * プライマリーキーの型
+     */
+    protected $keyType = 'string';
+
+    /**
+     * IDの桁数
+     */
+    const ID_LENGTH = 12;
+
+    public function __construct(array $attributes = [])
+    {
+        parent::__construct($attributes);
+        if (! array_get($this->attributes, 'id')) {
+            $this->setId();
+        }
+    }
+
+    /**
+     * ランダムなID値をid属性に代入する
+     */
+    private function setId()
+    {
+        $this->attributes['id'] = $this->getRandomId();
+    }
+
+    /**
+     * ランダムなID値を生成する
+     * @return string
+     */
+    private function getRandomId()
+    {
+        $characters = array_merge(
+            range(0, 9), range('a', 'z'),
+            range('A', 'Z'), ['-', '_']
+        );
+
+        $length = count($characters);
+
+        $id = "";
+
+        for ($i=0; $i < self::ID_LENGTH; $i++) {
+            $id .= $characters[random_int(0, $length -1)];
+        }
+
+        return $id;
+    }
+}
+```
+
+`App/User.php` に追加
+
+```php:User.php
+/**
+ * リレーションシップ - photosテーブル
+ * @return \Illuminate\Database\Eloquent\Relations\HasMany
+ */
+public function photos()
+{
+    return $this->hasMany('App\Photo');
+}
+```
+
+#### ルーティング
+`routes/api.php`
+
+```php:api.php
+Route::post('/photos', 'PhotoController@create')->name('photo.create');
+```
+
+#### フォームリクエスト
+
+```
+php artisan make:request StorePhoto
+```
+
+`app/Http/Requests/StorePhoto.php`
+
+```php:StorePhoto.php
+<?php
+
+namespace App\Http\Requests;
+
+use Illuminate\Foundation\Http\FormRequest;
+
+class StorePhoto extends FormRequest
+{
+    /**
+     * Determine if the user is authorized to make this request.
+     *
+     * @return bool
+     */
+    public function authorize()
+    {
+        return true;
+    }
+
+    /**
+     * Get the validation rules that apply to the request.
+     *
+     * @return array
+     */
+    public function rules()
+    {
+        return [
+            'photo' => 'required|file|mimes:jpg,jpeg,png,gif'
+        ];
+    }
+}
+```
+
+#### コントローラー
+
+`app/Http/Controllers/PhotoController.php` で
+
+```php:PhotoController.php
+use App\Photo;
+use Illuminate\Http\Request;
+use App\Http\Requests\StorePhoto;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
+```
+
+それぞれ読み込み、 `create` メソッドを追加する。
+
+```php:PhotoController.php
+/**
+ * Show the form for creating a new resource.
+ * @param StorePhoto $request
+ * @return \Illuminate\Http\Response
+ */
+public function create(StorePhoto $request)
+{
+    // 投稿写真の拡張子を取得する
+    $extension = $request->photo->extension();
+    $photo = new Photo();
+    // ランダムな値と拡張子を組み合わせてファイル名にする
+    $photo->filename = $photo->id . '.' . $extension;
+    // s3にファイルを公開状態で保存する
+    Storage::cloud()->putFileAs('', $request->photo, $photo->filename, 'public');
+    // DBエラー時にファイル削除を行うため、トランザクションを利用する
+    DB::beginTransaction();
+
+    try {
+        Auth::user()->photos()->save($photo);
+        DB::commit();
+    } catch(\Exception $exception) {
+        DB::rollBack();
+        // DBとの不整合を避けるためアップロードしたファイルを削除
+        Storage::cloud()->delete($photo->filename);
+        throw $exception;
+    }
+    // リソースの新規作成なのでレスポンスコードは201(CREATED)を返却する
+    return response($photo, 201);
+}
+```
+
+#### テストの実行
+
+```
+./vendor/bin/phpunit --testdox
+```
+
+#### S3操作ライブラリ
+
+```
+composer require league/flysystem-aws-s3-v3
+```

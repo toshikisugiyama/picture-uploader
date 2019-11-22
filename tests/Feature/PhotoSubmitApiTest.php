@@ -48,7 +48,7 @@ class PhotoSubmitApiTest extends TestCase
             'photo' => UploadedFile::fake()->image('photo.jpg'),
         ]);
         $response->assertStatus(500);
-        $this->assertEquals(0, count(Storage::cloud()->files));
+        $this->assertEquals(0, count(Storage::cloud()->files()));
     }
 
     /**
@@ -56,7 +56,7 @@ class PhotoSubmitApiTest extends TestCase
      */
     public function should_ファイル保存エラーの場合はDBへの挿入はしない()
     {
-        Storage::shouldRecieve('cloud')->once()->andReturnNull();
+        Storage::shouldReceive('cloud')->once()->andReturnNull();
         $response = $this->actingAs($this->user)->json('POST', route('photo.create'), [
             'photo' => UploadedFile::fake()->image('photo.jpg'),
         ]);

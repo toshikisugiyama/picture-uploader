@@ -82,7 +82,7 @@
 
 |URL|メソッド|認証|内容|
 |:--|:--|:--|:--|
-|/api/phptos|GET||写真一覧取得|
+|/api/photos|GET||写真一覧取得|
 |/api/photos|POST|Y|写真投稿|
 |/api/photos/{id}|GET||写真詳細取得|
 |/api/photos/{id}/like|PUT|Y|写真いいね追加|
