@@ -2302,3 +2302,88 @@ public function create(StorePhoto $request)
 ```
 composer require league/flysystem-aws-s3-v3
 ```
+
+---
+
+### ファイルコンポーネント作成
+#### PhotoForm
+`PhotoForm.vue` を作成する。
+
+```
+resources/js/components/PhotoForm.vue
+```
+
+```js:PhotoForm.vue
+<template>
+  <div v-show="value" class="photo-form">
+    <h2 class="title">Submit a photo</h2>
+    <form class="form">
+      <input type="file">
+      <div>
+        <button type="submit" class="button">submit</button>
+      </div>
+    </form>
+  </div>
+</template>
+
+<script>
+export default {
+  props: {
+    value: {
+      type: Boolean,
+      required: true,
+    }
+  }
+}
+</script>
+```
+#### Navbar
+`resources/js/components/Navbar.vue`
+
+```js:Navbar.vue
+<template>
+  <nav class="navbar">
+    <RouterLink to="/">
+      Picture Uploader
+    </RouterLink>
+    <div class="navbar-menu">
+      <div v-if="isLogin" class="navbar-item">
+        <button @click="showForm = ! showForm" class="button">
+          Submit a photo
+        </button>
+      </div>
+      <span v-if="isLogin" class="navbar-item">
+        {{ username }}
+      </span>
+      <div v-else class="navbar-item">
+        <RouterLink class="button" to="/login">
+          Login / Register
+        </RouterLink>
+      </div>
+    </div>
+    <PhotoForm v-model="showForm" />
+  </nav>
+</template>
+
+<script>
+import PhotoForm from './PhotoForm'
+export default {
+  components: {
+    PhotoForm,
+  },
+  data(){
+    return{
+      showForm: false,
+    }
+  },
+  computed: {
+    isLogin(){
+      return this.$store.getters['auth/check']
+    },
+    username(){
+      return this.$store.getters['auth/username']
+    }
+  }
+}
+</script>
+```
