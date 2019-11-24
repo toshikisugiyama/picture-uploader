@@ -2612,4 +2612,172 @@ export default {
 }
 </script>
 ```
+### ローディング
 
+```
+touch resources/js/components/Loader.vue
+```
+
+`resources/js/components/Loader.vue`
+
+```js:Loader.vue
+<template>
+  <div class="loader">
+    <p class="loading-text">
+      <slot>Loading...</slot>
+    </p>
+    <div class="loader-item">
+      <div></div>
+    </div>
+  </div>
+</template>
+```
+
+#### フォームコンポーネント
+`resources/js/components/PhotoForm.vue`
+
+```js:PhotoForm.vue
+<template>
+  <div v-show="value" class="photo-form">
+    <h2 class="title">Submit a photo</h2>
+    <div class="panel" v-show="loading">
+      <Loader>Sending your photo...</Loader>
+    </div>
+    <form v-show="! loading" class="form" @submit.prevent="submit">
+      <div class="errors" v-if="errors">
+        <ul v-if="errors.photo">
+          <li v-for="msg in errors.photo" :key="msg">
+            {{ msg }}
+          </li>
+        </ul>
+      </div>
+      <input class="form-item" type="file" @change="onFileChange">
+      <output class="form-output" v-if="preview">
+        <img :src="preview" alt="">
+      </output>
+      <div class="form-item">
+        <button type="submit" class="button">submit</button>
+      </div>
+    </form>
+  </div>
+</template>
+
+<script>
+import {CREATED,UNPROCESSABLE_ENTITY} from '../util'
+import Loader from './Loader.vue'
+
+export default {
+  props: {
+    value: {
+      type: Boolean,
+      required: true,
+    }
+  },
+  data(){
+    return {
+      loading: false,
+      preview: null,
+      photo: null,
+      errors: null,
+    }
+  },
+  methods: {
+    components: {
+      Loader,
+    },
+    onFileChange(event){
+      if (event.target.files.length === 0) {
+        this.reset()
+        return false
+      }
+      if (!event.target.files[0].type.match('image.*')) {
+        this.reset()
+        return false
+      }
+      const reader = new FileReader()
+      reader.onload = e => {
+        this.preview = e.target.result
+      }
+      this.photo = event.target.files[0]
+      reader.readAsDataURL(this.photo)
+    },
+    reset(){
+      this.preview = '',
+      this.photo = null
+      this.$el.querySelector('input[type="file"]').value = null
+    },
+    async submit(){
+      this.loading = true
+      const formData = new FormData()
+      formData.append('photo', this.photo)
+      const response = await axiot.post('/api/photos', formData)
+      this.loading = false
+      if (response.status === UNPROCESSABLE_ENTITY) {
+        this.errors = response.data.errors
+        return false
+      }
+      this.reset()
+      this.$emit('input', false)
+      if (response.status !== CREATED) {
+        this.$store.commit('error/setCode', response.status)
+        return false
+      }
+      this.$router.push(`/photos/${response.data.id}`)
+    }
+  },
+}
+</script>
+```
+
+#### サクセスページ
+##### メッセージストア作成
+
+```
+touch resources/js/store/message.js
+```
+
+`resources/js/store/message.js`
+
+```js:message.js
+const state = {
+  content: ''
+}
+
+const mutations = {
+  setContent(state, {content,timeout}){
+    state.content = content
+    if (typeof timeout === 'undefined') {
+      timeout = 3000
+    }
+    setTimeout(() => (state.content = ''), timeout)
+  },
+}
+
+export default {
+  namespaced: true,
+  state,
+  mutations,
+}
+```
+
+`resources/js/store/index.js` で `message` モジュールを読み込む  
+
+```js:index.js
+import Vue from 'vue'
+import Vuex from 'vuex'
+import auth from './auth'
+import error from './error'
+import message from './message'
+
+Vue.use(Vuex)
+
+const store = new Vuex.Store({
+  modules: {
+    auth,
+    error,
+    message,
+  }
+})
+
+export default store
+```
