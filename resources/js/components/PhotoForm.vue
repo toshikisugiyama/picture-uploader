@@ -4,7 +4,7 @@
     <div class="panel" v-show="loading">
       <Loader>Sending your photo...</Loader>
     </div>
-    <form v-show="! loading" class="form" @submit.prevent="submit">
+    <form v-show="!loading" class="form" @submit.prevent="submit">
       <div class="errors" v-if="errors">
         <ul v-if="errors.photo">
           <li v-for="msg in errors.photo" :key="msg">
@@ -28,6 +28,9 @@ import {CREATED,UNPROCESSABLE_ENTITY} from '../util'
 import Loader from './Loader.vue'
 
 export default {
+  components: {
+    Loader,
+  },
   props: {
     value: {
       type: Boolean,
@@ -43,9 +46,6 @@ export default {
     }
   },
   methods: {
-    components: {
-      Loader,
-    },
     onFileChange(event){
       if (event.target.files.length === 0) {
         this.reset()
@@ -59,8 +59,8 @@ export default {
       reader.onload = e => {
         this.preview = e.target.result
       }
+      reader.readAsDataURL(event.target.files[0])
       this.photo = event.target.files[0]
-      reader.readAsDataURL(this.photo)
     },
     reset(){
       this.preview = '',
@@ -71,7 +71,7 @@ export default {
       this.loading = true
       const formData = new FormData()
       formData.append('photo', this.photo)
-      const response = await axiot.post('/api/photos', formData)
+      const response = await axios.post('/api/photos', formData)
       this.loading = false
       if (response.status === UNPROCESSABLE_ENTITY) {
         this.errors = response.data.errors
@@ -83,6 +83,10 @@ export default {
         this.$store.commit('error/setCode', response.status)
         return false
       }
+      this.$store.commit('message/setContent', {
+        content: '写真が投稿されました！',
+        timeout: 6000
+      })
       this.$router.push(`/photos/${response.data.id}`)
     }
   },

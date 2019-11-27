@@ -2781,3 +2781,110 @@ const store = new Vuex.Store({
 
 export default store
 ```
+
+### コンポーネント構成
+#### メッセージコンポーネント
+
+`resources/js/components/Message.vue`
+
+```js:Message.vue
+<template>
+  <div class="message" v-show="message">
+    {{ message }}
+  </div>
+</template>
+
+<script>
+import { mapState } from "vuex"
+export default {
+  computed: {
+    ...mapState({
+      message: state => state.message.content
+    })
+  }
+}
+</script>
+```
+
+#### フォームコンポーネント
+
+`resources/js/components/PhotoForm.vue`
+
+```js:PhotoForm.vue
+async submit(){
+  this.loading = true
+  const formData = new FormData()
+  formData.append('photo', this.photo)
+  const response = await axiot.post('/api/photos', formData)
+  this.loading = false
+  if (response.status === UNPROCESSABLE_ENTITY) {
+    this.errors = response.data.errors
+    return false
+  }
+  this.reset()
+  this.$emit('input', false)
+  if (response.status !== CREATED) {
+    this.$store.commit('error/setCode', response.status)
+    return false
+  }
+  this.$store.commit('message/setContent', {
+    contengt: '写真が投稿されました！',
+    timeout: 6000
+  })
+  this.$router.push(`/photos/${response.data.id}`)
+}
+```
+
+#### ルートコンポーネント
+
+`resources/js/App.vue`
+
+```js:App.vue
+<template>
+  <div>
+    <header>
+      <Navbar />
+    </header>
+    <main>
+      <div class="container">
+        <Message />
+        <RouterView />
+      </div>
+    </main>
+    <Footer />
+  </div>
+</template>
+
+<script>
+import Message from './components/Message.vue'
+import Navbar from './components/Navbar.vue'
+import Footer from './components/Footer.vue'
+import {INTERNAL_SERVER_ERROR} from './util'
+
+export default {
+  components: {
+    Message,
+    Navbar,
+    Footer
+  },
+  computed: {
+    errorCode(){
+      return this.$store.state.error.code
+    },
+  },
+  watch: {
+    errorCode: {
+      handler(val){
+        if (val === INTERNAL_SERVER_ERROR) {
+          this.$router.push('/500')
+        }
+      },
+      immediate: true
+    },
+    $route(){
+      this.$store.commit('error/setCode', null)
+    },
+  },
+}
+</script>
+```
