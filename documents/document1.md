@@ -2888,3 +2888,171 @@ export default {
 }
 </script>
 ```
+
+---
+
+### JSONレスポンス
+#### テストコード
+##### ファクトリ
+テストコード作成のためのファクトリを作る  
+
+```
+php artisan make:factory PhotoFactory
+```
+
+`database/factories/PhotoFactory.php`
+
+```php:PhotoFactory.php
+<?php
+
+/** @var \Illuminate\Database\Eloquent\Factory $factory */
+
+use Faker\Generator as Faker;
+
+$factory->define(App\Photo::class, function (Faker $faker) {
+    return [
+        //
+        'id' => str_random(12),
+        'user_id' => function () {
+            return factory(App\User::class)->create()->id;
+        },
+        'filename' => str_random(12).'jpg',
+        'created_at' => $faker->dateTime(),
+        'updated_at' => $faker->dateTime(),
+    ];
+});
+```
+
+##### テストケース
+テストを作る  
+
+```
+php artisan make:test PhotoListApiTest
+```
+
+`tests/Feature/PhotoListApiTest.php`
+
+```php:PhotoListApiTest.php
+<?php
+
+namespace Tests\Feature;
+
+use App\Photo;
+use App\User;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\WithFaker;
+use Tests\TestCase;
+use Carbon\Carbon;
+use Illuminate\Support\Facades\DB;
+
+class PhotoListApiTest extends TestCase
+{
+    use RefreshDatabase;
+    /**
+     * @test
+     */
+    public function should_正しい構造のJSONを返却する()
+    {
+        factory(Photo::class, 5)->create();
+        $response = $this->json('GET', route('photo.index'));
+        $photos = Photo::with(['owner'])->orderby('created_at', 'desc')->get();
+        $expected_data = $photos->map(function($photo){
+            return [
+                'id' => $photo->id,
+                'url' => $photo->url,
+                'owner' => [
+                    'name' => $photo->name,
+                ],
+            ];
+        })->all();
+        $response
+        ->assertStatus(200)
+        ->assertJsonCount(5, 'data')
+        ->assertJsonFragment([
+            'data' => $expected_data,
+        ]);
+    }
+}
+```
+
+#### APIの実装
+##### ルーティング
+`routes/api.php` に追加する  
+
+```php:api.php
+Route::get('/photos', 'PhotoController@index')->name('photo.index');
+```
+
+##### Photoモデル
+###### リレーションシップ & URLアクセサ
+`app/Photo.php` に `owner` メソッドを追加  
+
+```php:Photo.php
+/**
+ * リレーションシップ usersテーブル
+ * @return \Illuminate\Database\Eloquent\Relations\BelongsTo 
+ */
+public function owner()
+{
+    return $this->belongsTo('App\User','user_id','id','users');
+}
+
+/**
+ * アクセサ - url
+ * @return string
+ */
+public function getUrlAttribute()
+{
+    return Storage::cloud()->url($this->attributes['filename']);
+}
+
+/**
+ * JSONに含める属性
+ */
+protected $appends = [
+    'url',
+];
+
+protected $visible = [
+    'id', 'owner', 'url',
+];
+```
+
+##### Userモデル
+`app/User.php` を編集する
+
+```php:User.php
+/**
+  * The attributes that should be hidden for arrays.
+  *
+  * @var array
+  */
+protected $hidden = [
+    'password', 'remember_token',
+];
+```
+
+を削除して、
+
+```php:User.php
+/**
+ * JSONに含める属性
+ * @var array
+ */
+protected $visible = [
+    'name',
+];
+```
+
+を追加する。
+
+##### コントローラー
+`app/Http/Controllers/PhotoController.php`
+
+```php:PhotoController.php
+public function index()
+{
+    $photos = Photo::with(['owner'])->orderBy(Photo::CREATED_AT, 'desc')->paginate();
+    return $photos;
+}
+```
