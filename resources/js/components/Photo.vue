@@ -5,6 +5,8 @@
         :src="item.url"
         :alt="`Photo by ${item.owner.name}`"
         class="photo-image"
+        width="300px"
+        height="300px"
       >
     </figure>
     <RouterLink
