@@ -9,6 +9,11 @@ use Illuminate\Support\Facades\Storage;
 class Photo extends Model
 {
     /**
+     * 1ページのアイテム数
+     */
+    protected $perPage = 3;
+
+    /**
      * プライマリーキーの型
      */
     protected $keyType = 'string';

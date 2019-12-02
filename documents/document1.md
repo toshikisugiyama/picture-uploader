@@ -3214,3 +3214,134 @@ export default {
 }
 </script>
 ```
+
+---
+
+### ページネーション
+#### ルート定義
+`resources/js/router.js`  
+
+```js:router.js
+{
+  path: '/',
+  component: PhotoList,
+  props: route => {
+    const page = route.query.page
+    return {
+      page: /^[1-9][0-9]*$/.test(page)?page*1:1
+    }
+  }
+},
+```
+
+```
+touch resources/js/components/Pagination.vue
+```
+
+`resources/js/components/Pagination.vue`
+
+```js:Pagination.vue
+<template>
+  <div class="pagination">
+    <RouterLink
+      v-if="! isFirstPage"
+      :to="`/?page=${currentPage - 1}`"
+      class="button"
+    >
+      prev
+    </RouterLink>
+    <RouterLink
+      v-if="! isLastPage"
+      :to="`/?page=${currentPage + 1}`"
+      class="button"
+    >
+      next
+    </RouterLink>
+  </div>
+</template>
+
+<script>
+export default {
+  props: {
+    currentPage: {
+      type: Number,
+      required: true,
+    },
+    lastPage: {
+      type: Number,
+      required: true,
+    }
+  },
+  computed: {
+    isFirstPage(){
+      return this.currentPage === 1
+    },
+    isLastPage(){
+      return this.currentPage === this.lastPage
+    }
+  }
+}
+</script>
+```
+
+`resources/js/pages/PhotoList.vue`
+
+```js:PhotoList.vue
+<template>
+  <div class="photo-list">
+    <Photo
+      class="photo-item"
+      v-for="photo in photos"
+      :key="photo.id"
+      :item="photo"
+    >
+    </Photo>
+    <Pagination
+      :current-page="currentPage"
+      :last-page="lastPage"
+    />
+  </div>
+</template>
+
+<script>
+import {OK} from '../util'
+import Photo from '../components/Photo.vue'
+import Pagination from '../components/Pagination.vue'
+export default {
+  components: {
+    Photo,
+    Pagination,
+  },
+  data(){
+    return {
+      photos: [],
+      currentPage: 0,
+      lastPage: 0,
+    }
+  },
+  methods: {
+    async fetchPhotos(){
+      const response = await axios.get('/api/photos')
+
+      if (response.status !== OK) {
+        this.$store.commit('error/setCode', response.status)
+        return false
+      }
+      this.photos = response.data.data
+      this.currentPage = response.data.current_page
+      this.lastPage = response.data.last_page
+    }
+  },
+  watch: {
+    $route: {
+      async handler(){
+        await this.fetchPhotos()
+      },
+      immediate: true
+    }
+  }
+}
+</script>
+```
+
+
