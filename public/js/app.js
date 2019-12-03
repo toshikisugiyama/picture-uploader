@@ -2570,6 +2570,18 @@ __webpack_require__.r(__webpack_exports__);
 //
 //
 //
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
 
 /* harmony default export */ __webpack_exports__["default"] = ({
   props: {
@@ -2580,7 +2592,8 @@ __webpack_require__.r(__webpack_exports__);
   },
   data: function data() {
     return {
-      photo: null
+      photo: null,
+      fullWidth: false
     };
   },
   methods: {
@@ -21981,33 +21994,52 @@ var render = function() {
   var _h = _vm.$createElement
   var _c = _vm._self._c || _h
   return _vm.photo
-    ? _c("div", { staticClass: "photo-detail" }, [
-        _c("figure", [
-          _c("img", { attrs: { src: _vm.photo.url, alt: "" } }),
-          _vm._v(" "),
-          _c("figcaption", [
-            _vm._v("Posted by " + _vm._s(_vm.photo.owner.name))
-          ])
-        ]),
-        _vm._v(" "),
-        _c("div", [
-          _c("button", [_vm._v("0")]),
-          _vm._v(" "),
-          _c(
-            "a",
-            {
-              staticClass: "button",
+    ? _c(
+        "div",
+        {
+          staticClass: "photo-detail",
+          class: { "photo-detail-column": _vm.fullWidth }
+        },
+        [
+          _c("figure", { staticClass: "photo-detail-contents" }, [
+            _c("img", {
               attrs: {
-                href: "/photos/" + _vm.photo.id + "/download",
-                title: "Download photo"
+                src: _vm.photo.url,
+                alt: "",
+                width: "100%",
+                height: "100%"
+              },
+              on: {
+                click: function($event) {
+                  _vm.fullWidth = !_vm.fullWidth
+                }
               }
-            },
-            [_vm._v("\n      Download\n    ")]
-          ),
+            }),
+            _vm._v(" "),
+            _c("figcaption", [
+              _vm._v("Posted by " + _vm._s(_vm.photo.owner.name))
+            ])
+          ]),
           _vm._v(" "),
-          _c("h2", [_vm._v("\n      Comments\n    ")])
-        ])
-      ])
+          _c("div", { staticClass: "photo-detail-contents" }, [
+            _c("button", [_vm._v("0")]),
+            _vm._v(" "),
+            _c(
+              "a",
+              {
+                staticClass: "button",
+                attrs: {
+                  href: "/photos/" + _vm.photo.id + "/download",
+                  title: "Download photo"
+                }
+              },
+              [_vm._v("\n      Download\n    ")]
+            ),
+            _vm._v(" "),
+            _c("h2", [_vm._v("\n      Comments\n    ")])
+          ])
+        ]
+      )
     : _vm._e()
 }
 var staticRenderFns = []

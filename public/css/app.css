@@ -495,6 +495,34 @@ main .container .photo-list .photo-item .photo-overlay:hover {
   opacity: 1;
 }
 
+main .container .photo-detail {
+  display: -webkit-box;
+  display: flex;
+  flex-wrap: wrap;
+}
+
+main .container .photo-detail-contents {
+  width: 50%;
+}
+
+main .container .photo-detail-column {
+  -webkit-box-orient: vertical;
+  -webkit-box-direction: normal;
+          flex-direction: column;
+}
+
+main .container .photo-detail-column > .photo-detail-contents {
+  width: 100%;
+}
+
+main .container .photo-detail-column > .photo-detail-contents > figcaption {
+  display: none;
+}
+
+main .container .photo-detail-column > .photo-detail-contents:nth-child(2) {
+  display: none;
+}
+
 footer {
   display: -webkit-box;
   display: flex;
