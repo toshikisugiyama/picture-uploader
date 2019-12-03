@@ -11,7 +11,7 @@ class Photo extends Model
     /**
      * 1ページのアイテム数
      */
-    protected $perPage = 3;
+    // protected $perPage = 3;
 
     /**
      * プライマリーキーの型

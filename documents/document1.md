@@ -3343,5 +3343,78 @@ export default {
 }
 </script>
 ```
+---
 
+### Web API
+#### テスト
 
+```
+php artisan make:test PhotoDetailApiTest
+```
+
+`tests/Feature/PhotoDetailApiTest.php`
+
+```php:PhotoDetailApiTest.php
+<?php
+
+namespace Tests\Feature;
+
+use App\Photo;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\WithFaker;
+use Tests\TestCase;
+
+class PhotoDetailApiTest extends TestCase
+{
+    use RefreshDatabase;
+    /**
+     * @test
+     */
+    public function should_正しい構造のJSONを返却する()
+    {
+        factory(Photo::class)->create();
+        $photo = Photo::first();
+        $response = $this->json('GET',route('photo.show',[
+            'id' =>  $photo->id,
+        ]));
+        $response
+            ->assertStatus(200)
+            ->assertJsonFragment([
+                'id' => $photo->id,
+                'url' => $photo->url,
+                'owner' => [
+                    'name' => $photo->owner->name,
+                ],
+            ],
+        );
+    }
+}
+```
+
+#### ルート定義
+`routes/api.php`  
+
+```php:api.php
+Route::get('/photos/{id}', 'PhotoController@show')->name('photo.show');
+```
+
+`app/Http/Controllers/PhotoController.php`  に `show` メソッドを追加  
+`show` の認証必要も外す。
+
+```php:PhotoController.php
+public function __construct()
+{
+    // 認証が必要
+    $this->middleware('auth')->except(['index', 'download', 'show']);
+}
+/**
+ * 写真詳細
+ * @param  string $id
+ * @return Photo
+ */
+public function show(string $id)
+{
+    $photo = Photo::where('id', $id)->with(['owner'])->first();
+    return $photo ?? abort(404);
+}
+```
