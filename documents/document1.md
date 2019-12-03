@@ -2302,3 +2302,1198 @@ public function create(StorePhoto $request)
 ```
 composer require league/flysystem-aws-s3-v3
 ```
+
+---
+
+### ファイルコンポーネント作成
+#### PhotoForm
+`PhotoForm.vue` を作成する。
+
+```
+resources/js/components/PhotoForm.vue
+```
+
+```js:PhotoForm.vue
+<template>
+  <div v-show="value" class="photo-form">
+    <h2 class="title">Submit a photo</h2>
+    <form class="form">
+      <input type="file">
+      <div>
+        <button type="submit" class="button">submit</button>
+      </div>
+    </form>
+  </div>
+</template>
+
+<script>
+export default {
+  props: {
+    value: {
+      type: Boolean,
+      required: true,
+    }
+  }
+}
+</script>
+```
+#### Navbar
+`resources/js/components/Navbar.vue`
+
+```js:Navbar.vue
+<template>
+  <nav class="navbar">
+    <RouterLink to="/">
+      Picture Uploader
+    </RouterLink>
+    <div class="navbar-menu">
+      <div v-if="isLogin" class="navbar-item">
+        <button @click="showForm = ! showForm" class="button">
+          Submit a photo
+        </button>
+      </div>
+      <span v-if="isLogin" class="navbar-item">
+        {{ username }}
+      </span>
+      <div v-else class="navbar-item">
+        <RouterLink class="button" to="/login">
+          Login / Register
+        </RouterLink>
+      </div>
+    </div>
+    <PhotoForm v-model="showForm" />
+  </nav>
+</template>
+
+<script>
+import PhotoForm from './PhotoForm'
+export default {
+  components: {
+    PhotoForm,
+  },
+  data(){
+    return{
+      showForm: false,
+    }
+  },
+  computed: {
+    isLogin(){
+      return this.$store.getters['auth/check']
+    },
+    username(){
+      return this.$store.getters['auth/username']
+    }
+  }
+}
+</script>
+```
+
+### ファイルプレビュー
+`resources/js/components/PhotoForm.vue`
+
+```js:PhotoForm.vue
+<template>
+  <div v-show="value" class="photo-form">
+    <h2 class="title">Submit a photo</h2>
+    <form class="form">
+      <input class="form-item" type="file" @change="onFileChange">
+      <output class="form-output" v-if="preview">
+        <img :src="preview" alt="">
+      </output>
+      <div class="form-item">
+        <button type="submit" class="button">submit</button>
+      </div>
+    </form>
+  </div>
+</template>
+
+<script>
+export default {
+  props: {
+    value: {
+      type: Boolean,
+      required: true,
+    }
+  },
+  data(){
+    return {
+      preview: null,
+    }
+  },
+  methods: {
+    onFileChange(event){
+      if (event.target.files.length === 0) {
+        this.reset()
+        return false
+      }
+      if (!event.target.files[0].type.match('image.*')) {
+        this.reset()
+        return false
+      }
+      const reader = new FileReader()
+      reader.onload = e => {
+        this.preview = e.target.result
+      }
+      reader.readAsDataURL(event.target.files[0])
+    },
+    reset(){
+      this.preview = '',
+      this.$el.querySelector('input[type="file"]').value = null
+    }
+  },
+}
+</script>
+```
+
+### ファイル送信
+#### API呼び出し
+`resources/js/components/PhotoForm.vue`
+
+```js:PhotoForm.vue
+<template>
+  <div v-show="value" class="photo-form">
+    <h2 class="title">Submit a photo</h2>
+    <form class="form" @submit.prevent="submit">
+      <input class="form-item" type="file" @change="onFileChange">
+      <output class="form-output" v-if="preview">
+        <img :src="preview" alt="">
+      </output>
+      <div class="form-item">
+        <button type="submit" class="button">submit</button>
+      </div>
+    </form>
+  </div>
+</template>
+
+<script>
+export default {
+  props: {
+    value: {
+      type: Boolean,
+      required: true,
+    }
+  },
+  data(){
+    return {
+      preview: null,
+      photo: null,
+    }
+  },
+  methods: {
+    onFileChange(event){
+      if (event.target.files.length === 0) {
+        this.reset()
+        return false
+      }
+      if (!event.target.files[0].type.match('image.*')) {
+        this.reset()
+        return false
+      }
+      const reader = new FileReader()
+      reader.onload = e => {
+        this.preview = e.target.result
+      }
+      this.photo = event.target.files[0]
+      reader.readAsDataURL(this.photo)
+    },
+    reset(){
+      this.preview = '',
+      this.photo = null
+      this.$el.querySelector('input[type="file"]').value = null
+    },
+    async submit(){
+      const formData = new FormData()
+      formData.append('photo', this.photo)
+      const response = await axiot.post('/api/photos', formData)
+      this.reset()
+      this.$emit('input', false)
+    }
+  },
+}
+</script>
+```
+
+#### 投稿完了後のページ遷移
+##### 遷移先のページ作成
+
+```
+touch resources/js/pages/PhotoDetail.vue
+```
+
+`resources/js/pages/PhotoDetail.vue`
+
+```js:PhotoDetail.vue
+<template>
+  <h1>Photo Detail</h1>
+</template>
+```
+
+#### ルーティング & エラー処理
+`resources/js/router.js`
+
+```js:router.js
+<template>
+  <div v-show="value" class="photo-form">
+    <h2 class="title">Submit a photo</h2>
+    <form class="form" @submit.prevent="submit">
+      <div class="errors" v-if="errors">
+        <ul v-if="errors.photo">
+          <li v-for="msg in errors.photo" :key="msg">
+            {{ msg }}
+          </li>
+        </ul>
+      </div>
+      <input class="form-item" type="file" @change="onFileChange">
+      <output class="form-output" v-if="preview">
+        <img :src="preview" alt="">
+      </output>
+      <div class="form-item">
+        <button type="submit" class="button">submit</button>
+      </div>
+    </form>
+  </div>
+</template>
+
+<script>
+import {CREATED,UNPROCESSABLE_ENTITY} from '../util'
+export default {
+  props: {
+    value: {
+      type: Boolean,
+      required: true,
+    }
+  },
+  data(){
+    return {
+      preview: null,
+      photo: null,
+      errors: null,
+    }
+  },
+  methods: {
+    onFileChange(event){
+      if (event.target.files.length === 0) {
+        this.reset()
+        return false
+      }
+      if (!event.target.files[0].type.match('image.*')) {
+        this.reset()
+        return false
+      }
+      const reader = new FileReader()
+      reader.onload = e => {
+        this.preview = e.target.result
+      }
+      this.photo = event.target.files[0]
+      reader.readAsDataURL(this.photo)
+    },
+    reset(){
+      this.preview = '',
+      this.photo = null
+      this.$el.querySelector('input[type="file"]').value = null
+    },
+    async submit(){
+      const formData = new FormData()
+      formData.append('photo', this.photo)
+      const response = await axiot.post('/api/photos', formData)
+      if (response.status === UNPROCESSABLE_ENTITY) {
+        this.errors = response.data.errors
+        return false
+      }
+      this.reset()
+      this.$emit('input', false)
+      if (response.status !== CREATED) {
+        this.$store.commit('error/setCode', response.status)
+        return false
+      }
+      this.$router.push(`/photos/${response.data.id}`)
+    }
+  },
+}
+</script>
+```
+### ローディング
+
+```
+touch resources/js/components/Loader.vue
+```
+
+`resources/js/components/Loader.vue`
+
+```js:Loader.vue
+<template>
+  <div class="loader">
+    <p class="loading-text">
+      <slot>Loading...</slot>
+    </p>
+    <div class="loader-item">
+      <div></div>
+    </div>
+  </div>
+</template>
+```
+
+#### フォームコンポーネント
+`resources/js/components/PhotoForm.vue`
+
+```js:PhotoForm.vue
+<template>
+  <div v-show="value" class="photo-form">
+    <h2 class="title">Submit a photo</h2>
+    <div class="panel" v-show="loading">
+      <Loader>Sending your photo...</Loader>
+    </div>
+    <form v-show="! loading" class="form" @submit.prevent="submit">
+      <div class="errors" v-if="errors">
+        <ul v-if="errors.photo">
+          <li v-for="msg in errors.photo" :key="msg">
+            {{ msg }}
+          </li>
+        </ul>
+      </div>
+      <input class="form-item" type="file" @change="onFileChange">
+      <output class="form-output" v-if="preview">
+        <img :src="preview" alt="">
+      </output>
+      <div class="form-item">
+        <button type="submit" class="button">submit</button>
+      </div>
+    </form>
+  </div>
+</template>
+
+<script>
+import {CREATED,UNPROCESSABLE_ENTITY} from '../util'
+import Loader from './Loader.vue'
+
+export default {
+  props: {
+    value: {
+      type: Boolean,
+      required: true,
+    }
+  },
+  data(){
+    return {
+      loading: false,
+      preview: null,
+      photo: null,
+      errors: null,
+    }
+  },
+  methods: {
+    components: {
+      Loader,
+    },
+    onFileChange(event){
+      if (event.target.files.length === 0) {
+        this.reset()
+        return false
+      }
+      if (!event.target.files[0].type.match('image.*')) {
+        this.reset()
+        return false
+      }
+      const reader = new FileReader()
+      reader.onload = e => {
+        this.preview = e.target.result
+      }
+      this.photo = event.target.files[0]
+      reader.readAsDataURL(this.photo)
+    },
+    reset(){
+      this.preview = '',
+      this.photo = null
+      this.$el.querySelector('input[type="file"]').value = null
+    },
+    async submit(){
+      this.loading = true
+      const formData = new FormData()
+      formData.append('photo', this.photo)
+      const response = await axiot.post('/api/photos', formData)
+      this.loading = false
+      if (response.status === UNPROCESSABLE_ENTITY) {
+        this.errors = response.data.errors
+        return false
+      }
+      this.reset()
+      this.$emit('input', false)
+      if (response.status !== CREATED) {
+        this.$store.commit('error/setCode', response.status)
+        return false
+      }
+      this.$router.push(`/photos/${response.data.id}`)
+    }
+  },
+}
+</script>
+```
+
+#### サクセスページ
+##### メッセージストア作成
+
+```
+touch resources/js/store/message.js
+```
+
+`resources/js/store/message.js`
+
+```js:message.js
+const state = {
+  content: ''
+}
+
+const mutations = {
+  setContent(state, {content,timeout}){
+    state.content = content
+    if (typeof timeout === 'undefined') {
+      timeout = 3000
+    }
+    setTimeout(() => (state.content = ''), timeout)
+  },
+}
+
+export default {
+  namespaced: true,
+  state,
+  mutations,
+}
+```
+
+`resources/js/store/index.js` で `message` モジュールを読み込む  
+
+```js:index.js
+import Vue from 'vue'
+import Vuex from 'vuex'
+import auth from './auth'
+import error from './error'
+import message from './message'
+
+Vue.use(Vuex)
+
+const store = new Vuex.Store({
+  modules: {
+    auth,
+    error,
+    message,
+  }
+})
+
+export default store
+```
+
+### コンポーネント構成
+#### メッセージコンポーネント
+
+`resources/js/components/Message.vue`
+
+```js:Message.vue
+<template>
+  <div class="message" v-show="message">
+    {{ message }}
+  </div>
+</template>
+
+<script>
+import { mapState } from "vuex"
+export default {
+  computed: {
+    ...mapState({
+      message: state => state.message.content
+    })
+  }
+}
+</script>
+```
+
+#### フォームコンポーネント
+
+`resources/js/components/PhotoForm.vue`
+
+```js:PhotoForm.vue
+async submit(){
+  this.loading = true
+  const formData = new FormData()
+  formData.append('photo', this.photo)
+  const response = await axiot.post('/api/photos', formData)
+  this.loading = false
+  if (response.status === UNPROCESSABLE_ENTITY) {
+    this.errors = response.data.errors
+    return false
+  }
+  this.reset()
+  this.$emit('input', false)
+  if (response.status !== CREATED) {
+    this.$store.commit('error/setCode', response.status)
+    return false
+  }
+  this.$store.commit('message/setContent', {
+    contengt: '写真が投稿されました！',
+    timeout: 6000
+  })
+  this.$router.push(`/photos/${response.data.id}`)
+}
+```
+
+#### ルートコンポーネント
+
+`resources/js/App.vue`
+
+```js:App.vue
+<template>
+  <div>
+    <header>
+      <Navbar />
+    </header>
+    <main>
+      <div class="container">
+        <Message />
+        <RouterView />
+      </div>
+    </main>
+    <Footer />
+  </div>
+</template>
+
+<script>
+import Message from './components/Message.vue'
+import Navbar from './components/Navbar.vue'
+import Footer from './components/Footer.vue'
+import {INTERNAL_SERVER_ERROR} from './util'
+
+export default {
+  components: {
+    Message,
+    Navbar,
+    Footer
+  },
+  computed: {
+    errorCode(){
+      return this.$store.state.error.code
+    },
+  },
+  watch: {
+    errorCode: {
+      handler(val){
+        if (val === INTERNAL_SERVER_ERROR) {
+          this.$router.push('/500')
+        }
+      },
+      immediate: true
+    },
+    $route(){
+      this.$store.commit('error/setCode', null)
+    },
+  },
+}
+</script>
+```
+
+---
+
+### JSONレスポンス
+#### テストコード
+##### ファクトリ
+テストコード作成のためのファクトリを作る  
+
+```
+php artisan make:factory PhotoFactory
+```
+
+`database/factories/PhotoFactory.php`
+
+```php:PhotoFactory.php
+<?php
+
+/** @var \Illuminate\Database\Eloquent\Factory $factory */
+
+use Faker\Generator as Faker;
+
+$factory->define(App\Photo::class, function (Faker $faker) {
+    return [
+        //
+        'id' => str_random(12),
+        'user_id' => function () {
+            return factory(App\User::class)->create()->id;
+        },
+        'filename' => str_random(12).'jpg',
+        'created_at' => $faker->dateTime(),
+        'updated_at' => $faker->dateTime(),
+    ];
+});
+```
+
+##### テストケース
+テストを作る  
+
+```
+php artisan make:test PhotoListApiTest
+```
+
+`tests/Feature/PhotoListApiTest.php`
+
+```php:PhotoListApiTest.php
+<?php
+
+namespace Tests\Feature;
+
+use App\Photo;
+use App\User;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\WithFaker;
+use Tests\TestCase;
+use Carbon\Carbon;
+use Illuminate\Support\Facades\DB;
+
+class PhotoListApiTest extends TestCase
+{
+    use RefreshDatabase;
+    /**
+     * @test
+     */
+    public function should_正しい構造のJSONを返却する()
+    {
+        factory(Photo::class, 5)->create();
+        $response = $this->json('GET', route('photo.index'));
+        $photos = Photo::with(['owner'])->orderby('created_at', 'desc')->get();
+        $expected_data = $photos->map(function($photo){
+            return [
+                'id' => $photo->id,
+                'url' => $photo->url,
+                'owner' => [
+                    'name' => $photo->name,
+                ],
+            ];
+        })->all();
+        $response
+        ->assertStatus(200)
+        ->assertJsonCount(5, 'data')
+        ->assertJsonFragment([
+            'data' => $expected_data,
+        ]);
+    }
+}
+```
+
+#### APIの実装
+##### ルーティング
+`routes/api.php` に追加する  
+
+```php:api.php
+Route::get('/photos', 'PhotoController@index')->name('photo.index');
+```
+
+##### Photoモデル
+###### リレーションシップ & URLアクセサ
+`app/Photo.php` に `owner` メソッドを追加  
+
+```php:Photo.php
+/**
+ * リレーションシップ usersテーブル
+ * @return \Illuminate\Database\Eloquent\Relations\BelongsTo 
+ */
+public function owner()
+{
+    return $this->belongsTo('App\User','user_id','id','users');
+}
+
+/**
+ * アクセサ - url
+ * @return string
+ */
+public function getUrlAttribute()
+{
+    return Storage::cloud()->url($this->attributes['filename']);
+}
+
+/**
+ * JSONに含める属性
+ */
+protected $appends = [
+    'url',
+];
+
+protected $visible = [
+    'id', 'owner', 'url',
+];
+```
+
+##### Userモデル
+`app/User.php` を編集する
+
+```php:User.php
+/**
+  * The attributes that should be hidden for arrays.
+  *
+  * @var array
+  */
+protected $hidden = [
+    'password', 'remember_token',
+];
+```
+
+を削除して、
+
+```php:User.php
+/**
+ * JSONに含める属性
+ * @var array
+ */
+protected $visible = [
+    'name',
+];
+```
+
+を追加する。
+
+##### コントローラー
+`app/Http/Controllers/PhotoController.php`
+
+```php:PhotoController.php
+public function index()
+{
+    $photos = Photo::with(['owner'])->orderBy(Photo::CREATED_AT, 'desc')->paginate();
+    return $photos;
+}
+```
+テスト実行する。  
+
+```
+./vendor/bin/phpunit --testdox
+```
+
+---
+
+### ダウンロードリンク
+#### ルート定義
+`routes/web.php`  
+
+```php:web.php
+Route::get('/photos/{photo}/download', 'PhotoController@download');
+```
+
+#### コントローラー
+`app/Http/Controllers/PhotoController.php`  
+
+```php:PhotoController.php
+public function __construct()
+{
+    // 認証が必要
+    $this->middleware('auth')->except(['index', 'download']);
+}
+
+/**
+ * 写真ダウンロード
+ * @param Photo $photo
+ * @return \Illuminate\Http\Response
+ */
+public function download(Photo $photo)
+{
+    // 写真の存在チェック
+    if (! Storage::cloud()->exists($photo->filename)) {
+        abort(404);
+    }
+    $headers = [
+        'Content-Type' => 'application/octet-stream',
+        'Content-Disposition' => 'attachment; filename="'.$photo->filename.'"',
+    ];
+    return response(Storage::cloud()->get($photo->filename), 200, $headers);
+}
+```
+`/photos/{写真ID}/download` にアクセスして写真をダウンロードできるか確かめる。  
+
+---
+
+### Photoコンポーネント
+
+```
+touch resources/js/components/Photo.vue
+```
+
+`resources/js/components/Photo.vue`  
+
+```js:Photo.vue
+<template>
+  <div class="photo">
+    <figure class="photo-wrapper">
+      <img
+        :src="item.url"
+        :alt="`Photo by ${item.owner.name}`"
+        class="photo-image"
+      >
+    </figure>
+    <RouterLink
+      class="photo-overlay"
+      :to="`/photos/${item.id}`"
+      :title="`View the photo by ${item.owner.name}`"
+    >
+      <div class="photo-controls">
+        <button
+          class="photo-action"
+          title="Like photo"
+        >
+          0
+        </button>
+        <a
+          :href="`/photos/${item.id}/download`"
+          @click.stop
+          title="Download photo"
+          class="photo-action"
+        >
+          ダウンロード
+        </a>
+      </div>
+      <div class="photo-username">
+        {{ item.owner.name }}
+      </div>
+    </RouterLink>
+  </div>
+</template>
+
+<script>
+export default {
+  props: {
+    item: {
+      type: Object,
+      required: true,
+    }
+  }
+}
+</script>
+```
+
+---
+
+### PhotoListコンポーネント  
+`resources/js/pages/PhotoList.vue`
+
+```js:PhotoList.vue
+<template>
+  <div class="photo-list">
+    <Photo
+      class="photo-item"
+      v-for="photo in photos"
+      :key="photo.id"
+      :item="photo"
+    >
+    </Photo>
+  </div>
+</template>
+
+<script>
+import {OK} from '../util'
+import Photo from '../components/Photo.vue'
+export default {
+  components: {
+    Photo
+  },
+  data(){
+    return {
+      photos: []
+    }
+  },
+  methods: {
+    async fetchPhotos(){
+      const response = await axios.get('/api/photos')
+
+      if (response.status !== OK) {
+        this.$store.commit('error/setCode', response.status)
+        return false
+      }
+      this.photos = response.data.data
+    }
+  },
+  watch: {
+    $route: {
+      async handler(){
+        await this.fetchPhotos()
+      },
+      immediate: true
+    }
+  }
+}
+</script>
+```
+
+---
+
+### ページネーション
+#### ルート定義
+`resources/js/router.js`  
+
+```js:router.js
+{
+  path: '/',
+  component: PhotoList,
+  props: route => {
+    const page = route.query.page
+    return {
+      page: /^[1-9][0-9]*$/.test(page)?page*1:1
+    }
+  }
+},
+```
+
+```
+touch resources/js/components/Pagination.vue
+```
+
+`resources/js/components/Pagination.vue`
+
+```js:Pagination.vue
+<template>
+  <div class="pagination">
+    <RouterLink
+      v-if="! isFirstPage"
+      :to="`/?page=${currentPage - 1}`"
+      class="button"
+    >
+      prev
+    </RouterLink>
+    <RouterLink
+      v-if="! isLastPage"
+      :to="`/?page=${currentPage + 1}`"
+      class="button"
+    >
+      next
+    </RouterLink>
+  </div>
+</template>
+
+<script>
+export default {
+  props: {
+    currentPage: {
+      type: Number,
+      required: true,
+    },
+    lastPage: {
+      type: Number,
+      required: true,
+    }
+  },
+  computed: {
+    isFirstPage(){
+      return this.currentPage === 1
+    },
+    isLastPage(){
+      return this.currentPage === this.lastPage
+    }
+  }
+}
+</script>
+```
+
+`resources/js/pages/PhotoList.vue`
+
+```js:PhotoList.vue
+<template>
+  <div class="photo-list">
+    <Photo
+      class="photo-item"
+      v-for="photo in photos"
+      :key="photo.id"
+      :item="photo"
+    >
+    </Photo>
+    <Pagination
+      :current-page="currentPage"
+      :last-page="lastPage"
+    />
+  </div>
+</template>
+
+<script>
+import {OK} from '../util'
+import Photo from '../components/Photo.vue'
+import Pagination from '../components/Pagination.vue'
+export default {
+  components: {
+    Photo,
+    Pagination,
+  },
+  data(){
+    return {
+      photos: [],
+      currentPage: 0,
+      lastPage: 0,
+    }
+  },
+  methods: {
+    async fetchPhotos(){
+      const response = await axios.get('/api/photos')
+
+      if (response.status !== OK) {
+        this.$store.commit('error/setCode', response.status)
+        return false
+      }
+      this.photos = response.data.data
+      this.currentPage = response.data.current_page
+      this.lastPage = response.data.last_page
+    }
+  },
+  watch: {
+    $route: {
+      async handler(){
+        await this.fetchPhotos()
+      },
+      immediate: true
+    }
+  }
+}
+</script>
+```
+---
+
+### Web API
+#### テスト
+
+```
+php artisan make:test PhotoDetailApiTest
+```
+
+`tests/Feature/PhotoDetailApiTest.php`
+
+```php:PhotoDetailApiTest.php
+<?php
+
+namespace Tests\Feature;
+
+use App\Photo;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\WithFaker;
+use Tests\TestCase;
+
+class PhotoDetailApiTest extends TestCase
+{
+    use RefreshDatabase;
+    /**
+     * @test
+     */
+    public function should_正しい構造のJSONを返却する()
+    {
+        factory(Photo::class)->create();
+        $photo = Photo::first();
+        $response = $this->json('GET',route('photo.show',[
+            'id' =>  $photo->id,
+        ]));
+        $response
+            ->assertStatus(200)
+            ->assertJsonFragment([
+                'id' => $photo->id,
+                'url' => $photo->url,
+                'owner' => [
+                    'name' => $photo->owner->name,
+                ],
+            ],
+        );
+    }
+}
+```
+
+#### ルート定義
+`routes/api.php`  
+
+```php:api.php
+Route::get('/photos/{id}', 'PhotoController@show')->name('photo.show');
+```
+
+`app/Http/Controllers/PhotoController.php`  に `show` メソッドを追加  
+`show` の認証必要も外す。
+
+```php:PhotoController.php
+public function __construct()
+{
+    // 認証が必要
+    $this->middleware('auth')->except(['index', 'download', 'show']);
+}
+/**
+ * 写真詳細
+ * @param  string $id
+ * @return Photo
+ */
+public function show(string $id)
+{
+    $photo = Photo::where('id', $id)->with(['owner'])->first();
+    return $photo ?? abort(404);
+}
+```
+---
+
+### フロントエンド
+#### PhotoDetailコンポーネント
+
+`resources/js/pages/PhotoDetail.vue`
+
+```js:PhotoDetail.vue
+<template>
+  <div
+    v-if="photo"
+    class="photo-detail"
+    :class="{'photo-detail-column': fullWidth}"
+  >
+    <figure
+      class="photo-detail-contents"
+    >
+      <img
+        :src="photo.url"
+        @click="fullWidth = ! fullWidth"
+        alt=""
+        width="100%"
+        height="100%"
+      >
+      <figcaption>Posted by {{ photo.owner.name }}</figcaption>
+    </figure>
+    <div class="photo-detail-contents">
+      <button>0</button>
+      <a
+        :href="`/photos/${photo.id}/download`"
+        class="button"
+        title="Download photo"
+      >
+        Download
+      </a>
+      <h2>
+        Comments
+      </h2>
+    </div>
+  </div>
+</template>
+
+<script>
+import {OK} from '../util'
+export default {
+  props: {
+    id: {
+      type: String,
+      required: true,
+    },
+  },
+  data(){
+    return{
+      photo: null,
+      fullWidth: false,
+    }
+  },
+  methods: {
+    async fetchPhoto(){
+      const response = await axios.get(`/api/photos/${this.id}`)
+
+      if (response.status !== OK) {
+        this.$store.commit('error/setCode', response.status)
+        return false
+      }
+      this.photo = response.data
+    },
+  },
+  watch: {
+    $route: {
+      async handler(){
+        await this.fetchPhoto()
+      },
+      immediate: true,
+    }
+  }
+}
+</script>
+```

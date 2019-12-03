@@ -99,7 +99,7 @@
               >
             </div>
             <div class="form-items">
-              <label for="password-confirmation">Name</label>
+              <label for="password-confirmation">Password(confirmation)</label>
               <input
                 type="password"
                 class="form-item"
