@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Photo;
+use App\Comment;
+use App\Http\Requests\StoreComment;
 use Illuminate\Http\Request;
 use App\Http\Requests\StorePhoto;
 use Illuminate\Support\Facades\Auth;
@@ -15,6 +17,25 @@ class PhotoController extends Controller
     {
         // 認証が必要
         $this->middleware('auth')->except(['index', 'download', 'show']);
+    }
+
+    /**
+     * コメント投稿
+     * @param Photo $photo
+     * @param StoreComment $request
+     * @return \Illuminate\Http\Response
+     */
+    public function addComment(Photo $photo, StoreComment $request)
+    {
+        $comment = new Comment();
+        $comment->content = $request->get('content');
+        $comment->user_id = Auth::user()->id;
+        $photo->comments()->save($comment);
+
+        // authorリレーションをロードするためにコメントを取得し直す
+        $new_comment = Comment::where('id', $comment->id)->with('author')->first();
+
+        return response($new_comment, 201);
     }
 
     /**

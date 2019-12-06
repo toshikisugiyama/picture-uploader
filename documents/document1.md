@@ -3497,3 +3497,273 @@ export default {
 }
 </script>
 ```
+
+---
+
+### Web API
+#### テスト
+
+```
+php artisan make:factory CommentFactory
+```
+
+`database/factories/CommentFactory.php`
+
+```php:CommentFactory.php
+<?php
+
+/** @var \Illuminate\Database\Eloquent\Factory $factory */
+
+use App\Comment;
+use App\User;
+use Faker\Generator as Faker;
+
+$factory->define(Comment::class, function (Faker $faker) {
+    return [
+        'content' => substr($faker->text, 0, 500),
+        'user_id' => function(){
+            return factory(User::class)->create()->id;
+        }
+    ];
+});
+```
+
+#### 写真詳細取得テストケース
+
+`tests/Feature/PhotoDetailApiTest.php`
+
+```php:PhotoDetailApiTest.php
+<?php
+
+namespace Tests\Feature;
+
+use App\Comment;
+use App\Photo;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\WithFaker;
+use Tests\TestCase;
+
+class PhotoDetailApiTest extends TestCase
+{
+    use RefreshDatabase;
+    /**
+     * @test
+     */
+    public function should_正しい構造のJSONを返却する()
+    {
+        factory(Photo::class)->create()->each(function($photo){
+            $photo->comments()->saveMany(factory(Comment::class, 3)->make());
+        });
+        $photo = Photo::first();
+        $response = $this->json('GET',route('photo.show',[
+            'id' =>  $photo->id,
+        ]));
+        $response
+            ->assertStatus(200)
+            ->assertJsonFragment([
+                'id' => $photo->id,
+                'url' => $photo->url,
+                'owner' => [
+                    'name' => $photo->owner->name,
+                ],
+                'comment' => $photo->comments
+                                ->sortByDesc('id')
+                                ->map(function($comment){
+                                    return [
+                                        'author' => [
+                                            'name' => $comment->author->name,
+                                        ],
+                                        'content' => $comment->content,
+                                    ];
+                                })
+                                ->all(),
+            ],
+        );
+    }
+}
+```
+
+#### コメント投稿テストケース
+
+```
+php artisan make:test AddCommentApiTest
+```
+
+`tests/Feature/AddCommentApiTest.php`
+
+```php:AddCommentApiTest.php
+<?php
+
+namespace Tests\Feature;
+
+use App\User;
+use App\Photo;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\WithFaker;
+use Tests\TestCase;
+
+class AddCommentApiTest extends TestCase
+{
+    use RefreshDatabase;
+    /**
+     * @return void
+     */
+    public function setUp(): void
+    {
+        parent::setUp();
+        // テストユーザー作成
+        $this->user = factory(User::class)->create();
+    }
+
+    /**
+     * @test
+     */
+    public function should_コメントを追加できる()
+    {
+        factory(Photo::class)->create();
+        $photo = Photo::first();
+        $content = 'sample content';
+        $response = $this
+            ->actingAs($this->user)
+            ->json('POST', route('photo.comment', [
+                'photo' => $photo->id,
+            ]), compact('content'));
+        $comments = $photo->comments()->get();
+        $response->assertStatus(201)
+                ->assertJsonFragment([
+                    'author' => [
+                        'name' => $this->user->name,
+                    ],
+                    'content' -> $content,
+                ]);
+        $this->assertEquals(1, $comments->count());
+        $this->assertEquals($count, $comments[0]->content);
+    }
+}
+```
+
+#### ルート定義
+
+`routes/api.php`
+
+```php:api.php
+Route::post('/photos/{photo}/comments', 'PhotoController@addComment')->name('photo.comment');
+```
+
+#### モデルクラス
+
+`app/Comment.php`
+
+```php:Comment.php
+<?php
+
+namespace App;
+
+use Illuminate\Database\Eloquent\Model;
+
+class Comment extends Model
+{
+    /** JSONに含める属性 */
+    protected $visible = [
+        'author', 'content',
+    ];
+
+    /**
+     * リレーションシップ - usersテーブル
+     * @return Illuminate\Database\Eloquent\Relations\BelongsTo
+     */
+    public function author()
+    {
+        return $this->belongsTo('App\User', 'user_id', 'id', 'users');
+    }
+}
+```
+
+#### Photo
+`app/Photo.php`
+
+```php:Photo.php
+protected $visible = [
+    'id', 'owner', 'url', 'comments',
+];
+
+/**
+ * リレーションシップ - commentsテーブル
+ * @return Illuminate\Database\Eloquent\Relations\HasMany
+ */
+public function comments()
+{
+    return $this->hasMany('App\Comment')->orderBy('id', 'desc');
+}
+```
+
+#### フォームリクエスト
+
+```
+php artisan make:request StoreComment
+```
+
+`app/Http/Requests/StoreComment.php`
+
+```php:StoreComment.php
+<?php
+
+namespace App\Http\Requests;
+
+use Illuminate\Foundation\Http\FormRequest;
+
+class StoreComment extends FormRequest
+{
+    /**
+     * Determine if the user is authorized to make this request.
+     *
+     * @return bool
+     */
+    public function authorize()
+    {
+        return true;
+    }
+
+    /**
+     * Get the validation rules that apply to the request.
+     *
+     * @return array
+     */
+    public function rules()
+    {
+        return [
+            'content' => 'required|max:500',
+        ];
+    }
+}
+```
+
+#### コントローラー
+##### コメント投稿
+`app/Http/Controllers/PhotoController.php`
+
+```php:PhotoController.php
+/**
+ * コメント投稿
+ * @param Photo $photo
+ * @param StoreComment $request
+ * @return Illuminate\Http\Response
+ */
+public function addComment(Photo $photo, StoreComment $request)
+{
+    $comment = new Comment();
+    $comment->content = $request->get('content');
+    $comment->user_id = Auth::user()->id;
+    $photo->comments()->save($comment);
+
+    // authorリレーションをロードするためにコメントを取得し直す
+    $new_comment = Comment::where('id', $comment->id)->with('author')->first();
+
+    return response($new_comment, 201);
+}
+```
+#### テスト実行
+
+```
+./vendor/bin/phpunit --testdox
+```
