@@ -3767,3 +3767,20 @@ public function addComment(Photo $photo, StoreComment $request)
 ```
 ./vendor/bin/phpunit --testdox
 ```
+
+#### 写真詳細
+
+`app/Http/Controllers/PhotoController.php`  
+
+```php:PhotoController.php
+/**
+ * 写真詳細
+ * @param  string $id
+ * @return Photo
+ */
+public function show(string $id)
+{
+    $photo = Photo::where('id', $id)->with(['owner', 'comments.author'])->first();
+    return $photo ?? abort(404);
+}
+```
