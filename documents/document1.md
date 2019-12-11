@@ -3934,3 +3934,141 @@ export default {
 </script>
 ```
 
+---
+
+### いいね機能API
+#### テストコード
+
+```
+php artisan make:test LikeApiTest
+```
+
+`tests/Feature/LikeApiTest.php`
+
+```php
+<?php
+
+namespace Tests\Feature;
+
+use App\User;
+use App\Photo;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\WithFaker;
+use Tests\TestCase;
+
+class LikeApiTest extends TestCase
+{
+    use RefreshDatabase;
+    /**
+     * @return void
+     */
+    public function setUp(): void
+    {
+        parent::setUp();
+        $this->user = factory(User::class)->create();
+        factory(Photo::class)->create();
+    }
+
+    /**
+     * @test
+     */
+    public function should_いいねを追加できる()
+    {
+        $response = $this->actingAs($this->user)
+            ->json('PUT', route('photo.like', [
+                'photo' => $this->photo->id,
+            ]));
+        $response->assertStatus(200)
+            ->assertJsonFragment([
+                'photo_id' => $this->photo->id,
+            ]);
+        $this->assertEquals(1, $this->photo->likes()->count());
+    }
+
+    /**
+     * @test
+     */
+    public function should_2回同じ写真にいいねしても1回しかいいねがつかない()
+    {
+        $param = ['photo' => $this->photo->id];
+        $this->actingAs($this->user)
+            ->json('PUT', route('photo.like', $param));
+        $this->actingAs($this->user)
+            ->json('PUT', route('photo.like', $param));
+        $this->assertEquals(1, $this->photo->likes()->count());
+    }
+
+    /**
+     * @test
+     */
+    public function should_いいねを解除できる()
+    {
+        $response = $this->actingAs($this->user)
+            ->json('DELETE', route('photo.like', [
+                'photo' => $this->photo->id,
+            ]));
+        $response->assertStatus(200)
+                ->assertJsonFracment([
+                    'photo_id' => $this->photo->id,
+                ]);
+        $this->assertEquals(0, $this->photo->likes()->count());
+    }
+}
+```
+
+#### ルーティング
+`routes/api.php`
+
+```php:api.php
+Route::put('/photos/{photo}/like', 'PhotoController@like')->name('photo.like');
+Route::delete('/photos/{photo}/like', 'PhotoController@unlike');
+```
+
+#### モデル
+`app/Photo.php`
+
+```php:Photo.php
+/**
+ * リレーションシップ - usersテーブル
+ * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany
+ */
+public function likes()
+{
+    return $this->belongsToMany('App\User', 'likes')->withTimestamps();
+}
+```
+
+#### コントローラー
+`app/Http/Controllers/PhotoController.php`
+```php:PhotoController.php
+/**
+ * いいね
+ * @param string $id
+ * @return array
+ */
+public function like(string $id)
+{
+    $photo = Photo::where('id', $id)->with('likes')->first();
+    if(! $photo){
+        abort(404);
+    }
+    $photo->likes()->detach(Auth::user()->id);
+    $photo->likes()->attach(Auth::user()->id);
+    return ['photo_id' => $id];
+}
+
+/**
+ * いいね解除
+ * @param string $id
+ * @return array
+ */
+public function unlike()
+{
+    $photo = Photo::where('id', $id)->with('likes')->first();
+    if(! $photo){
+        abort(404);
+    }
+    $photo->likes()->detach(Auth::user()->id);
+    return ['photo_id' => $id];
+}
+```
