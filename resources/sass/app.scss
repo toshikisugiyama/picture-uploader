@@ -99,6 +99,17 @@ main {
           opacity: 0;
           transition: opacity .8s;
           background-color: rgba(0, 0, 0, 0.3);
+          .photo-controls {
+            .photo-action {
+              color: #333;
+              background-color: #fff;
+              cursor: pointer;
+            }
+            .photo-action.liked {
+              background-color: red;
+              color: #fff;
+            }
+          }
         }
         .photo-overlay:hover {
           opacity: 1;

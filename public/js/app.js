@@ -2140,11 +2140,21 @@ __webpack_require__.r(__webpack_exports__);
 //
 //
 //
+//
+//
 /* harmony default export */ __webpack_exports__["default"] = ({
   props: {
     item: {
       type: Object,
       required: true
+    }
+  },
+  methods: {
+    like: function like() {
+      this.$emit('like', {
+        id: this.item.id,
+        liked: this.item.liked_by_user
+      });
     }
   }
 });
@@ -2636,6 +2646,13 @@ function _arrayWithoutHoles(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
 //
 //
 //
+//
+//
+//
+//
+//
+//
+//
 
 /* harmony default export */ __webpack_exports__["default"] = ({
   props: {
@@ -2731,21 +2748,94 @@ function _arrayWithoutHoles(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
           }
         }
       }, null, this);
+    },
+    onLikeClick: function onLikeClick() {
+      if (!this.isLogin) {
+        alert('いいね機能を使うには、ログインしてください');
+        return false;
+      }
+
+      if (this.photo.liked_by_user) {
+        this.unlike();
+      } else {
+        this.like();
+      }
+    },
+    like: function like() {
+      var response;
+      return _babel_runtime_regenerator__WEBPACK_IMPORTED_MODULE_0___default.a.async(function like$(_context3) {
+        while (1) {
+          switch (_context3.prev = _context3.next) {
+            case 0:
+              _context3.next = 2;
+              return _babel_runtime_regenerator__WEBPACK_IMPORTED_MODULE_0___default.a.awrap(axios.put("api/photos/".concat(this.id, "/like")));
+
+            case 2:
+              response = _context3.sent;
+
+              if (!(response.status !== _util__WEBPACK_IMPORTED_MODULE_1__["OK"])) {
+                _context3.next = 6;
+                break;
+              }
+
+              this.$store.commit('error/setCode', response.status);
+              return _context3.abrupt("return", false);
+
+            case 6:
+              this.$set(this.photo, 'like_count', this.photo.likes_count + 1);
+              this.$set(this.photo, 'liked_by_user', true);
+
+            case 8:
+            case "end":
+              return _context3.stop();
+          }
+        }
+      }, null, this);
+    },
+    unlike: function unlike() {
+      var response;
+      return _babel_runtime_regenerator__WEBPACK_IMPORTED_MODULE_0___default.a.async(function unlike$(_context4) {
+        while (1) {
+          switch (_context4.prev = _context4.next) {
+            case 0:
+              _context4.next = 2;
+              return _babel_runtime_regenerator__WEBPACK_IMPORTED_MODULE_0___default.a.awrap(axios.put("api/photos/".concat(this.id, "/like")));
+
+            case 2:
+              response = _context4.sent;
+
+              if (!(response.status !== _util__WEBPACK_IMPORTED_MODULE_1__["OK"])) {
+                _context4.next = 6;
+                break;
+              }
+
+              response.$store.commit('error/setCode', response.status);
+              return _context4.abrupt("return", false);
+
+            case 6:
+              this.$set(this.photo, 'likes_count');
+
+            case 7:
+            case "end":
+              return _context4.stop();
+          }
+        }
+      }, null, this);
     }
   },
   watch: {
     $route: {
       handler: function handler() {
-        return _babel_runtime_regenerator__WEBPACK_IMPORTED_MODULE_0___default.a.async(function handler$(_context3) {
+        return _babel_runtime_regenerator__WEBPACK_IMPORTED_MODULE_0___default.a.async(function handler$(_context5) {
           while (1) {
-            switch (_context3.prev = _context3.next) {
+            switch (_context5.prev = _context5.next) {
               case 0:
-                _context3.next = 2;
+                _context5.next = 2;
                 return _babel_runtime_regenerator__WEBPACK_IMPORTED_MODULE_0___default.a.awrap(this.fetchPhoto());
 
               case 2:
               case "end":
-                return _context3.stop();
+                return _context5.stop();
             }
           }
         }, null, this);
@@ -2813,7 +2903,7 @@ __webpack_require__.r(__webpack_exports__);
           switch (_context.prev = _context.next) {
             case 0:
               _context.next = 2;
-              return _babel_runtime_regenerator__WEBPACK_IMPORTED_MODULE_0___default.a.awrap(axios.get('/api/photos'));
+              return _babel_runtime_regenerator__WEBPACK_IMPORTED_MODULE_0___default.a.awrap(axios.get("/api/photos/?page=".concat(this.page)));
 
             case 2:
               response = _context.sent;
@@ -2837,21 +2927,112 @@ __webpack_require__.r(__webpack_exports__);
           }
         }
       }, null, this);
+    },
+    onLikeClick: function onLikeClick(_ref) {
+      var id = _ref.id,
+          liked = _ref.liked;
+
+      if (!this.$store.getters['auth/check']) {
+        alert('いいね機能を使うには、ログインしてください');
+        return false;
+      }
+
+      if (liked) {
+        this.unlike(id);
+      } else {
+        this.like(id);
+      }
+    },
+    like: function like(id) {
+      var response;
+      return _babel_runtime_regenerator__WEBPACK_IMPORTED_MODULE_0___default.a.async(function like$(_context2) {
+        while (1) {
+          switch (_context2.prev = _context2.next) {
+            case 0:
+              _context2.next = 2;
+              return _babel_runtime_regenerator__WEBPACK_IMPORTED_MODULE_0___default.a.awrap(axios.put("/api/photos/".concat(id, "/like")));
+
+            case 2:
+              response = _context2.sent;
+
+              if (!(response.status !== _util__WEBPACK_IMPORTED_MODULE_1__["OK"])) {
+                _context2.next = 6;
+                break;
+              }
+
+              this.$store.commit('error/setCode', response.status);
+              return _context2.abrupt("return", false);
+
+            case 6:
+              this.photos = this.photos.map(function (photo) {
+                if (photo.id === response.data.photo_id) {
+                  photo.likes_count += 1;
+                  photo.liked_by_user = true;
+                }
+
+                console.log(photo.liked_by_user);
+                return photo;
+              });
+
+            case 7:
+            case "end":
+              return _context2.stop();
+          }
+        }
+      }, null, this);
+    },
+    unlike: function unlike(id) {
+      var response;
+      return _babel_runtime_regenerator__WEBPACK_IMPORTED_MODULE_0___default.a.async(function unlike$(_context3) {
+        while (1) {
+          switch (_context3.prev = _context3.next) {
+            case 0:
+              _context3.next = 2;
+              return _babel_runtime_regenerator__WEBPACK_IMPORTED_MODULE_0___default.a.awrap(axios.put("/api/photos/".concat(id, "/like")));
+
+            case 2:
+              response = _context3.sent;
+
+              if (!(response.status !== _util__WEBPACK_IMPORTED_MODULE_1__["OK"])) {
+                _context3.next = 6;
+                break;
+              }
+
+              this.$store.commit('error/setCode', resoponse.status);
+              return _context3.abrupt("return", false);
+
+            case 6:
+              this.photos = this.photos.map(function (photo) {
+                if (photo.id === response.data.photo_id) {
+                  photo.likes_count -= 1;
+                  photo.liked_by_user = false;
+                }
+
+                console.log(photo.liked_by_user);
+                return photo;
+              });
+
+            case 7:
+            case "end":
+              return _context3.stop();
+          }
+        }
+      }, null, this);
     }
   },
   watch: {
     $route: {
       handler: function handler() {
-        return _babel_runtime_regenerator__WEBPACK_IMPORTED_MODULE_0___default.a.async(function handler$(_context2) {
+        return _babel_runtime_regenerator__WEBPACK_IMPORTED_MODULE_0___default.a.async(function handler$(_context4) {
           while (1) {
-            switch (_context2.prev = _context2.next) {
+            switch (_context4.prev = _context4.next) {
               case 0:
-                _context2.next = 2;
+                _context4.next = 2;
                 return _babel_runtime_regenerator__WEBPACK_IMPORTED_MODULE_0___default.a.awrap(this.fetchPhotos());
 
               case 2:
               case "end":
-                return _context2.stop();
+                return _context4.stop();
             }
           }
         }, null, this);
@@ -21536,8 +21717,18 @@ var render = function() {
           _c("div", { staticClass: "photo-controls" }, [
             _c(
               "button",
-              { staticClass: "photo-action", attrs: { title: "Like photo" } },
-              [_vm._v("\n        0\n      ")]
+              {
+                staticClass: "photo-action",
+                class: { liked: _vm.item.liked_by_user },
+                attrs: { title: "Like photo" },
+                on: {
+                  click: function($event) {
+                    $event.preventDefault()
+                    return _vm.like($event)
+                  }
+                }
+              },
+              [_vm._v("\n        " + _vm._s(_vm.item.likes_count) + "\n      ")]
             ),
             _vm._v(" "),
             _c(
@@ -22127,7 +22318,16 @@ var render = function() {
           ]),
           _vm._v(" "),
           _c("div", { staticClass: "photo-detail-contents" }, [
-            _c("button", [_vm._v("0")]),
+            _c(
+              "button",
+              {
+                staticClass: "button",
+                class: { liked: _vm.photo.lied_by_user },
+                attrs: { title: "Like photo" },
+                on: { click: _vm.onLikeClick }
+              },
+              [_vm._v("\n      " + _vm._s(_vm.photo.likes_count) + "\n    ")]
+            ),
             _vm._v(" "),
             _c(
               "a",
@@ -22289,7 +22489,8 @@ var render = function() {
           return _c("Photo", {
             key: photo.id,
             staticClass: "photo-item",
-            attrs: { item: photo }
+            attrs: { item: photo },
+            on: { like: _vm.onLikeClick }
           })
         }),
         1

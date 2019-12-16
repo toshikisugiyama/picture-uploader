@@ -28,6 +28,8 @@ class PhotoListApiTest extends TestCase
                 'owner' => [
                     'name' => $photo->owner->name,
                 ],
+                'liked_by_user' => false,
+                'likes_count' => 0,
             ];
         })->all();
         $response
@@ -35,6 +37,8 @@ class PhotoListApiTest extends TestCase
         ->assertJsonCount(5, 'data')
         ->assertJsonFragment([
             'data' => $expected_data,
+            'liked_by_user' => false,
+            'likes_count' => 0,
         ]);
     }
 }

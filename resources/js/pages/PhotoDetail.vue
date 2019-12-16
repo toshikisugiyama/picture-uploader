@@ -17,7 +17,14 @@
       <figcaption>Posted by {{ photo.owner.name }}</figcaption>
     </figure>
     <div class="photo-detail-contents">
-      <button>0</button>
+      <button
+        class="button"
+        :class="{liked: photo.lied_by_user}"
+        title="Like photo"
+        @click="onLikeClick"
+      >
+        {{ photo.likes_count }}
+      </button>
       <a
         :href="`/photos/${photo.id}/download`"
         class="button"
@@ -126,6 +133,34 @@ export default {
       this.$set(this.photo, 'comments', [
         response.data, ...this.photo.comments
       ])
+    },
+    onLikeClick() {
+      if (!this.isLogin) {
+        alert('いいね機能を使うには、ログインしてください')
+        return false
+      }
+      if (this.photo.liked_by_user) {
+        this.unlike()
+      } else {
+        this.like()
+      }
+    },
+    async like() {
+      const response = await axios.put(`api/photos/${this.id}/like`)
+      if (response.status !== OK) {
+        this.$store.commit('error/setCode', response.status)
+        return false
+      }
+      this.$set(this.photo, 'like_count', this.photo.likes_count + 1)
+      this.$set(this.photo, 'liked_by_user', true)
+    },
+    async unlike() {
+      const response = await axios.put(`api/photos/${this.id}/like`)
+      if (response.status !== OK) {
+        response.$store.commit('error/setCode', response.status)
+        return false
+      }
+      this.$set(this.photo, 'likes_count')
     }
   },
   watch: {

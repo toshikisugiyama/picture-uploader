@@ -491,6 +491,17 @@ main .container .photo-list .photo-item .photo-overlay {
   background-color: rgba(0, 0, 0, 0.3);
 }
 
+main .container .photo-list .photo-item .photo-overlay .photo-controls .photo-action {
+  color: #333;
+  background-color: #fff;
+  cursor: pointer;
+}
+
+main .container .photo-list .photo-item .photo-overlay .photo-controls .photo-action.liked {
+  background-color: red;
+  color: #fff;
+}
+
 main .container .photo-list .photo-item .photo-overlay:hover {
   opacity: 1;
 }
