@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Photo;
+use App\Comment;
+use App\Http\Requests\StoreComment;
 use Illuminate\Http\Request;
 use App\Http\Requests\StorePhoto;
 use Illuminate\Support\Facades\Auth;
@@ -17,28 +19,10 @@ class PhotoController extends Controller
         $this->middleware('auth')->except(['index', 'download', 'show']);
     }
 
-    /**
-     * 写真ダウンロード
-     * @param Photo $photo
-     * @return \Illuminate\Http\Response
-     */
-    public function download(Photo $photo)
-    {
-        // 写真の存在チェック
-        if (! Storage::cloud()->exists($photo->filename)) {
-            abort(404);
-        }
-        $headers = [
-            'Content-Type' => 'application/octet-stream',
-            'Content-Disposition' => 'attachment; filename="'.$photo->filename.'"',
-        ];
-        return response(Storage::cloud()->get($photo->filename), 200, $headers);
-    }
 
     /**
-     * Display a listing of the resource.
      * 写真一覧
-     * @return \Illuminate\Http\Response
+     * @return \Illuminate\Contracts\Pagination\LengthAwarePaginator
      */
     public function index()
     {
@@ -47,7 +31,19 @@ class PhotoController extends Controller
     }
 
     /**
-     * Show the form for creating a new resource.
+     * 写真詳細
+     * @param string $id
+     * @return Photo
+     */
+    public function show(string $id)
+    {
+        $photo = Photo::where('id', $id)->with(['owner', 'comments.author'])->first();
+        return $photo ?? abort(404);
+    }
+
+
+    /**
+     * 写真投稿
      * @param StorePhoto $request
      * @return \Illuminate\Http\Response
      */
@@ -77,58 +73,70 @@ class PhotoController extends Controller
     }
 
     /**
-     * Store a newly created resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
+     * コメント投稿
+     * @param Photo $photo
+     * @param StoreComment $request
      * @return \Illuminate\Http\Response
      */
-    public function store(Request $request)
+    public function addComment(Photo $photo, StoreComment $request)
     {
-        //
+        $comment = new Comment();
+        $comment->content = $request->get('content');
+        $comment->user_id = Auth::user()->id;
+        $photo->comments()->save($comment);
+
+        // authorリレーションをロードするためにコメントを取得し直す
+        $new_comment = Comment::where('id', $comment->id)->with('author')->first();
+
+        return response($new_comment, 201);
     }
 
     /**
-     * 写真詳細
-     * @param  string $id
-     * @return Photo
+     * 写真ダウンロード
+     * @param Photo $photo
+     * @return \Illuminate\Http\Response
      */
-    public function show(string $id)
+    public function download(Photo $photo)
     {
-        $photo = Photo::where('id', $id)->with(['owner'])->first();
-        return $photo ?? abort(404);
+        // 写真の存在チェック
+        if (! Storage::cloud()->exists($photo->filename)) {
+            abort(404);
+        }
+        $headers = [
+            'Content-Type' => 'application/octet-stream',
+            'Content-Disposition' => 'attachment; filename="'.$photo->filename.'"',
+        ];
+        return response(Storage::cloud()->get($photo->filename), 200, $headers);
     }
 
     /**
-     * Show the form for editing the specified resource.
-     *
-     * @param  \App\Photo  $photo
-     * @return \Illuminate\Http\Response
+     * いいね
+     * @param string $id
+     * @return array
      */
-    public function edit(Photo $photo)
+    public function like(string $id)
     {
-        //
+        $photo = Photo::where('id', $id)->with('likes')->first();
+        if(! $photo){
+            abort(404);
+        }
+        $photo->likes()->detach(Auth::user()->id);
+        $photo->likes()->attach(Auth::user()->id);
+        return ['photo_id' => $id];
     }
 
     /**
-     * Update the specified resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  \App\Photo  $photo
-     * @return \Illuminate\Http\Response
+     * いいね解除
+     * @param string $id
+     * @return array
      */
-    public function update(Request $request, Photo $photo)
+    public function unlike(string $id)
     {
-        //
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     *
-     * @param  \App\Photo  $photo
-     * @return \Illuminate\Http\Response
-     */
-    public function destroy(Photo $photo)
-    {
-        //
+        $photo = Photo::where('id', $id)->with('likes')->first();
+        if(! $photo){
+            abort(404);
+        }
+        $photo->likes()->detach(Auth::user()->id);
+        return ['photo_id' => $id];
     }
 }

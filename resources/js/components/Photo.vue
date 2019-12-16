@@ -18,8 +18,10 @@
         <button
           class="photo-action"
           title="Like photo"
+          @click.prevent="like"
+          :class="{ liked: item.liked_by_user }"
         >
-          0
+          {{ item.likes_count }}
         </button>
         <a
           :href="`/photos/${item.id}/download`"
@@ -43,6 +45,14 @@ export default {
     item: {
       type: Object,
       required: true,
+    }
+  },
+  methods: {
+    like(){
+      this.$emit('like', {
+        id: this.item.id,
+        liked: this.item.liked_by_user,
+      })
     }
   }
 }

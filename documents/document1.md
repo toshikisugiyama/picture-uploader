@@ -3497,3 +3497,578 @@ export default {
 }
 </script>
 ```
+
+---
+
+### Web API
+#### テスト
+
+```
+php artisan make:factory CommentFactory
+```
+
+`database/factories/CommentFactory.php`
+
+```php:CommentFactory.php
+<?php
+
+/** @var \Illuminate\Database\Eloquent\Factory $factory */
+
+use App\Comment;
+use App\User;
+use Faker\Generator as Faker;
+
+$factory->define(Comment::class, function (Faker $faker) {
+    return [
+        'content' => substr($faker->text, 0, 500),
+        'user_id' => function(){
+            return factory(User::class)->create()->id;
+        }
+    ];
+});
+```
+
+#### 写真詳細取得テストケース
+
+`tests/Feature/PhotoDetailApiTest.php`
+
+```php:PhotoDetailApiTest.php
+<?php
+
+namespace Tests\Feature;
+
+use App\Comment;
+use App\Photo;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\WithFaker;
+use Tests\TestCase;
+
+class PhotoDetailApiTest extends TestCase
+{
+    use RefreshDatabase;
+    /**
+     * @test
+     */
+    public function should_正しい構造のJSONを返却する()
+    {
+        factory(Photo::class)->create()->each(function($photo){
+            $photo->comments()->saveMany(factory(Comment::class, 3)->make());
+        });
+        $photo = Photo::first();
+        $response = $this->json('GET',route('photo.show',[
+            'id' =>  $photo->id,
+        ]));
+        $response
+            ->assertStatus(200)
+            ->assertJsonFragment([
+                'id' => $photo->id,
+                'url' => $photo->url,
+                'owner' => [
+                    'name' => $photo->owner->name,
+                ],
+                'comment' => $photo->comments
+                                ->sortByDesc('id')
+                                ->map(function($comment){
+                                    return [
+                                        'author' => [
+                                            'name' => $comment->author->name,
+                                        ],
+                                        'content' => $comment->content,
+                                    ];
+                                })
+                                ->all(),
+            ],
+        );
+    }
+}
+```
+
+#### コメント投稿テストケース
+
+```
+php artisan make:test AddCommentApiTest
+```
+
+`tests/Feature/AddCommentApiTest.php`
+
+```php:AddCommentApiTest.php
+<?php
+
+namespace Tests\Feature;
+
+use App\User;
+use App\Photo;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\WithFaker;
+use Tests\TestCase;
+
+class AddCommentApiTest extends TestCase
+{
+    use RefreshDatabase;
+    /**
+     * @return void
+     */
+    public function setUp(): void
+    {
+        parent::setUp();
+        // テストユーザー作成
+        $this->user = factory(User::class)->create();
+    }
+
+    /**
+     * @test
+     */
+    public function should_コメントを追加できる()
+    {
+        factory(Photo::class)->create();
+        $photo = Photo::first();
+        $content = 'sample content';
+        $response = $this
+            ->actingAs($this->user)
+            ->json('POST', route('photo.comment', [
+                'photo' => $photo->id,
+            ]), compact('content'));
+        $comments = $photo->comments()->get();
+        $response->assertStatus(201)
+                ->assertJsonFragment([
+                    'author' => [
+                        'name' => $this->user->name,
+                    ],
+                    'content' -> $content,
+                ]);
+        $this->assertEquals(1, $comments->count());
+        $this->assertEquals($count, $comments[0]->content);
+    }
+}
+```
+
+#### ルート定義
+
+`routes/api.php`
+
+```php:api.php
+Route::post('/photos/{photo}/comments', 'PhotoController@addComment')->name('photo.comment');
+```
+
+#### モデルクラス
+
+`app/Comment.php`
+
+```php:Comment.php
+<?php
+
+namespace App;
+
+use Illuminate\Database\Eloquent\Model;
+
+class Comment extends Model
+{
+    /** JSONに含める属性 */
+    protected $visible = [
+        'author', 'content',
+    ];
+
+    /**
+     * リレーションシップ - usersテーブル
+     * @return Illuminate\Database\Eloquent\Relations\BelongsTo
+     */
+    public function author()
+    {
+        return $this->belongsTo('App\User', 'user_id', 'id', 'users');
+    }
+}
+```
+
+#### Photo
+`app/Photo.php`
+
+```php:Photo.php
+protected $visible = [
+    'id', 'owner', 'url', 'comments',
+];
+
+/**
+ * リレーションシップ - commentsテーブル
+ * @return Illuminate\Database\Eloquent\Relations\HasMany
+ */
+public function comments()
+{
+    return $this->hasMany('App\Comment')->orderBy('id', 'desc');
+}
+```
+
+#### フォームリクエスト
+
+```
+php artisan make:request StoreComment
+```
+
+`app/Http/Requests/StoreComment.php`
+
+```php:StoreComment.php
+<?php
+
+namespace App\Http\Requests;
+
+use Illuminate\Foundation\Http\FormRequest;
+
+class StoreComment extends FormRequest
+{
+    /**
+     * Determine if the user is authorized to make this request.
+     *
+     * @return bool
+     */
+    public function authorize()
+    {
+        return true;
+    }
+
+    /**
+     * Get the validation rules that apply to the request.
+     *
+     * @return array
+     */
+    public function rules()
+    {
+        return [
+            'content' => 'required|max:500',
+        ];
+    }
+}
+```
+
+#### コントローラー
+##### コメント投稿
+`app/Http/Controllers/PhotoController.php`
+
+```php:PhotoController.php
+/**
+ * コメント投稿
+ * @param Photo $photo
+ * @param StoreComment $request
+ * @return Illuminate\Http\Response
+ */
+public function addComment(Photo $photo, StoreComment $request)
+{
+    $comment = new Comment();
+    $comment->content = $request->get('content');
+    $comment->user_id = Auth::user()->id;
+    $photo->comments()->save($comment);
+
+    // authorリレーションをロードするためにコメントを取得し直す
+    $new_comment = Comment::where('id', $comment->id)->with('author')->first();
+
+    return response($new_comment, 201);
+}
+```
+#### テスト実行
+
+```
+./vendor/bin/phpunit --testdox
+```
+
+#### 写真詳細
+
+`app/Http/Controllers/PhotoController.php`  
+
+```php:PhotoController.php
+/**
+ * 写真詳細
+ * @param  string $id
+ * @return Photo
+ */
+public function show(string $id)
+{
+    $photo = Photo::where('id', $id)->with(['owner', 'comments.author'])->first();
+    return $photo ?? abort(404);
+}
+```
+
+---
+
+### フロントエンド
+#### コメント投稿
+`resources/js/pages/PhotoDetail.vue`  
+
+```js:PhotoDetail.vue
+<template>
+  <div
+    v-if="photo"
+    class="photo-detail"
+    :class="{'photo-detail-column': fullWidth}"
+  >
+    <figure
+      class="photo-detail-contents"
+    >
+      <img
+        :src="photo.url"
+        @click="fullWidth = ! fullWidth"
+        alt=""
+        width="100%"
+        height="100%"
+      >
+      <figcaption>Posted by {{ photo.owner.name }}</figcaption>
+    </figure>
+    <div class="photo-detail-contents">
+      <button>0</button>
+      <a
+        :href="`/photos/${photo.id}/download`"
+        class="button"
+        title="Download photo"
+      >
+        Download
+      </a>
+      <h2 class="photo-detail-title">
+        Comments
+      </h2>
+      <ul
+        v-if="photo.comments.length > 0"
+        class="photo-detail-comments"
+      >
+        <li
+          v-for="comment in photo.comments"
+          :key="comment.content"
+          class="photo-detail-comment-item"
+        >
+          <p class="photo-detail-comment-body">
+            {{ comment.content }}
+          </p>
+          <p class="photo-detail-comment-info">
+            {{ comment.author.name }}
+          </p>
+        </li>
+      </ul>
+      <p v-else>No comments yet</p>
+      <form
+        @submit.prevent="addComment"
+        class="form"
+        v-if="isLogin"
+      >
+        <div class="errors" v-if="commentErrors">
+          <ul v-if="commentErrors.content">
+            <li
+              v-for="msg in commentErrors.content"
+              :key="msg"
+            >
+              {{ msg }}
+            </li>
+          </ul>
+        </div>
+        <textarea
+          name=""
+          id=""
+          cols="30"
+          rows="10"
+          class="form-item"
+          v-model="commentContent"
+        ></textarea>
+        <div class="form-button">
+          <button type="submit" class="button">submit comment</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</template>
+
+<script>
+import {OK, CREATED, UNPROCESSABLE_ENTITY} from '../util'
+export default {
+  props: {
+    id: {
+      type: String,
+      required: true,
+    },
+  },
+  data(){
+    return{
+      photo: null,
+      fullWidth: false,
+      commentContent: '',
+      commentErrors: null,
+    }
+  },
+  computed: {
+    isLogin() {
+      return this.$store.getters['auth/check']
+    }
+  },
+  methods: {
+    async fetchPhoto(){
+      const response = await axios.get(`/api/photos/${this.id}`)
+
+      if (response.status !== OK) {
+        this.$store.commit('error/setCode', response.status)
+        return false
+      }
+      this.photo = response.data
+    },
+    async addComment(){
+      const response = await axios.post(`/api/photos/${this.id}/comments`, {
+        content: this.commentContent,
+      })
+      if (response.status === UNPROCESSABLE_ENTITY) {
+        this.commentErrors = response.data.errors
+        return false
+      }
+      this.commentContent = ''
+      this.commentErrors = null
+      if (response.status !== CREATED) {
+        this.$store.commit('error/setCode', response.status)
+        return false
+      }
+      this.$set(this.photo, 'comments', [
+        response.data, ...this.photo.comments
+      ])
+    }
+  },
+  watch: {
+    $route: {
+      async handler(){
+        await this.fetchPhoto()
+      },
+      immediate: true,
+    }
+  }
+}
+</script>
+```
+
+---
+
+### いいね機能API
+#### テストコード
+
+```
+php artisan make:test LikeApiTest
+```
+
+`tests/Feature/LikeApiTest.php`
+
+```php
+<?php
+
+namespace Tests\Feature;
+
+use App\User;
+use App\Photo;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\WithFaker;
+use Tests\TestCase;
+
+class LikeApiTest extends TestCase
+{
+    use RefreshDatabase;
+    /**
+     * @return void
+     */
+    public function setUp(): void
+    {
+        parent::setUp();
+        $this->user = factory(User::class)->create();
+        factory(Photo::class)->create();
+    }
+
+    /**
+     * @test
+     */
+    public function should_いいねを追加できる()
+    {
+        $response = $this->actingAs($this->user)
+            ->json('PUT', route('photo.like', [
+                'photo' => $this->photo->id,
+            ]));
+        $response->assertStatus(200)
+            ->assertJsonFragment([
+                'photo_id' => $this->photo->id,
+            ]);
+        $this->assertEquals(1, $this->photo->likes()->count());
+    }
+
+    /**
+     * @test
+     */
+    public function should_2回同じ写真にいいねしても1回しかいいねがつかない()
+    {
+        $param = ['photo' => $this->photo->id];
+        $this->actingAs($this->user)
+            ->json('PUT', route('photo.like', $param));
+        $this->actingAs($this->user)
+            ->json('PUT', route('photo.like', $param));
+        $this->assertEquals(1, $this->photo->likes()->count());
+    }
+
+    /**
+     * @test
+     */
+    public function should_いいねを解除できる()
+    {
+        $response = $this->actingAs($this->user)
+            ->json('DELETE', route('photo.like', [
+                'photo' => $this->photo->id,
+            ]));
+        $response->assertStatus(200)
+                ->assertJsonFracment([
+                    'photo_id' => $this->photo->id,
+                ]);
+        $this->assertEquals(0, $this->photo->likes()->count());
+    }
+}
+```
+
+#### ルーティング
+`routes/api.php`
+
+```php:api.php
+Route::put('/photos/{photo}/like', 'PhotoController@like')->name('photo.like');
+Route::delete('/photos/{photo}/like', 'PhotoController@unlike');
+```
+
+#### モデル
+`app/Photo.php`
+
+```php:Photo.php
+/**
+ * リレーションシップ - usersテーブル
+ * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany
+ */
+public function likes()
+{
+    return $this->belongsToMany('App\User', 'likes')->withTimestamps();
+}
+```
+
+#### コントローラー
+`app/Http/Controllers/PhotoController.php`
+```php:PhotoController.php
+/**
+ * いいね
+ * @param string $id
+ * @return array
+ */
+public function like(string $id)
+{
+    $photo = Photo::where('id', $id)->with('likes')->first();
+    if(! $photo){
+        abort(404);
+    }
+    $photo->likes()->detach(Auth::user()->id);
+    $photo->likes()->attach(Auth::user()->id);
+    return ['photo_id' => $id];
+}
+
+/**
+ * いいね解除
+ * @param string $id
+ * @return array
+ */
+public function unlike()
+{
+    $photo = Photo::where('id', $id)->with('likes')->first();
+    if(! $photo){
+        abort(404);
+    }
+    $photo->likes()->detach(Auth::user()->id);
+    return ['photo_id' => $id];
+}
+```
