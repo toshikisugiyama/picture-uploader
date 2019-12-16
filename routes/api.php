@@ -28,3 +28,8 @@ Route::get('/photos/{id}', 'PhotoController@show')->name('photo.show');
 Route::post('/photos/{photo}/comments', 'PhotoController@addComment')->name('photo.comment');
 Route::put('/photos/{photo}/like', 'PhotoController@like')->name('photo.like');
 Route::delete('/photos/{photo}/like', 'PhotoController@unlike');
+
+Route::get('/refresh-token', function (Request $request){
+    $request->session()->regenerateToken();
+    return response()->json();
+});
