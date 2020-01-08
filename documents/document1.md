@@ -129,6 +129,12 @@ touch resources/views/index.blade.php
 </html>
 ```
 
+#### Vueをインストールする
+
+```
+npm install -D vue
+```
+
 #### app.js を編集する
 
 `resources/js/app.js`
@@ -161,7 +167,7 @@ npm install -D vue-router
 `resources/js/App.vue` を作成する
 
 ```
-touch resources/js/App.js
+touch resources/js/App.vue
 ```
 
 
